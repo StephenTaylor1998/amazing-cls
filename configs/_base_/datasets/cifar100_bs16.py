@@ -1,5 +1,6 @@
 # dataset settings
 dataset_type = 'CIFAR100'
+time_step = 4
 img_norm_cfg = dict(
     mean=[129.304, 124.070, 112.434],
     std=[68.170, 65.392, 70.418],
@@ -10,11 +11,13 @@ train_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['gt_label']),
+    dict(type='ToTime', keys=['img'], time_step=time_step),
     dict(type='Collect', keys=['img', 'gt_label'])
 ]
 test_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ImageToTensor', keys=['img']),
+    dict(type='ToTime', keys=['img'], time_step=time_step),
     dict(type='Collect', keys=['img'])
 ]
 data = dict(
