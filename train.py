@@ -11,7 +11,9 @@ import torch
 import torch.distributed as dist
 from mmcv import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist
-
+from amzcls.models import *
+from amzcls.datasets import *
+from amzcls.core.hook import *
 from mmcls import __version__
 from mmcls.apis import init_random_seed, set_random_seed, train_model
 from mmcls.datasets import build_dataset
