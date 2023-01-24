@@ -28,12 +28,10 @@ class SLeNet5(BaseBackbone):
         functional.set_backend(self, backend='cupy', instance=IFNode)
 
     def forward(self, x):
-        self.sn.zero_grad()
-        x = torch.permute(x, (1, 0, 2, 3, 4)).detach().data
+        functional.reset_net(self)
+        x = torch.permute(x, (1, 0, 2, 3, 4))
         x = self.features(x)
         x = self.sn(x)
         if self.num_classes > 0:
             x = self.classifier(x.squeeze())
-
-        self.sn.zero_grad()
         return (x.mean(0),)
