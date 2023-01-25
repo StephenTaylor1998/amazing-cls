@@ -123,7 +123,6 @@ class SpikeResNetCifar(nn.Module):
             x = torch.flatten(x, 2)
 
         x = self.fc(x)
-
         return (x.mean(0),)
 
     def forward(self, x):
@@ -133,8 +132,7 @@ class SpikeResNetCifar(nn.Module):
 def _resnet_cifar(arch, pretrained, progress, **kwargs):
     model = SpikeResNetCifar(**kwargs)
     if pretrained:
-        state_dict = load_state_dict_from_url(model_urls[arch],
-                                              progress=progress)
+        state_dict = load_state_dict_from_url(model_urls[arch], progress=progress)
         state_dict.pop('conv1.weight')
         state_dict.pop('fc.weight')
         state_dict.pop('fc.bias')
