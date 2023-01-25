@@ -14,3 +14,5 @@ log_level = 'INFO'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
+
+custom_hooks=[dict(type='NetResetHook')]
