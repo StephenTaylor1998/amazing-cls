@@ -26,7 +26,7 @@ class SpikePreActResNetCifar(nn.Module):
             norm_layer = layer.BatchNorm2d
         if neuron_cfg is None:
             print(f"[INFO] Using default neuron `{default_neuron}`.\n"
-                  "\tfrom `amzcls.models.backbones.sew_resnet`.")
+                  "\tfrom `amzcls.models.backbones.spike_preact_resnet`.")
             neuron_cfg = default_neuron
         self._norm_layer = norm_layer
         self.inplanes = 64
@@ -43,6 +43,7 @@ class SpikePreActResNetCifar(nn.Module):
         # image net: 3, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False
         self.conv1 = layer.Conv2d(in_channels, self.inplanes, kernel_size=(3, 3), padding=1, bias=False)
         self.bn1 = norm_layer(self.inplanes)
+        self.sn1 = build_node(neuron_cfg)
         self.layer1 = self._make_layer(
             block, 32, layers[0], stride=1, neuron_cfg=neuron_cfg)
         self.layer2 = self._make_layer(
@@ -113,14 +114,15 @@ class SpikePreActResNetCifar(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
 
+        # x = self.sn1(x)
         x = self.avgpool(x)
+        x = self.sn1(x)
         if self.avgpool.step_mode == 's':
             x = torch.flatten(x, 1)
         elif self.avgpool.step_mode == 'm':
             x = torch.flatten(x, 2)
 
         x = self.fc(x)
-
         return (x.mean(0),)
 
     def forward(self, x):

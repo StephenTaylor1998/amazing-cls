@@ -10,7 +10,9 @@ import torch
 from mmcv import DictAction
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
-
+from amzcls.models import *
+from amzcls.datasets import *
+from amzcls.core.hook import *
 from mmcls.apis import multi_gpu_test, single_gpu_test
 from mmcls.datasets import build_dataloader, build_dataset
 from mmcls.models import build_classifier
