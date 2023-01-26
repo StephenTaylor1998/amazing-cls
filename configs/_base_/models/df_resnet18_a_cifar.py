@@ -2,8 +2,8 @@
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='SpikeResNetCifar',
-        block_type='SEWBasicBlock',
+        type='DFResNetCifar',
+        block_type='DualFlowBasicBlockA',
         layers=[2, 2, 2, 2],
         width=[64, 128, 256, 512],
         num_classes=10,
@@ -15,6 +15,8 @@ model = dict(
         cnf='add',
         neuron_cfg=dict(
             type='IFNode',
+            v_reset=None,
+            detach_reset=False,
             surrogate_function=dict(
                 type='ATan'
             )

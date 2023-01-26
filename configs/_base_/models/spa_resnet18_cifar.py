@@ -5,6 +5,7 @@ model = dict(
         type='SpikePreActResNetCifar',
         block_type='SpikePreActBasicBlock',
         layers=[2, 2, 2, 2],
+        width=[64, 128, 256, 512],
         num_classes=10,
         in_channels=3,
         zero_init_residual=True,
