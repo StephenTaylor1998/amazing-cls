@@ -14,16 +14,21 @@ __all__ = ['SpikePreActResNetCifar', 'spike_preact_resnet18_cifar', 'spike_preac
            'spike_preact_wide_resnet50_cifar_2', 'spike_preact_wide_resnet101_cifar_2']
 
 default_neuron = dict(type='IFNode')
+default_width = [64, 128, 256, 512]
 
 
 @BACKBONES.register_module()
 class SpikePreActResNetCifar(nn.Module):
-    def __init__(self, block_type, layers, num_classes=10, in_channels=3, zero_init_residual=False,
+    def __init__(self, block_type, layers, width=None, num_classes=10, in_channels=3, zero_init_residual=False,
                  groups=1, width_per_group=64, replace_stride_with_dilation=None, norm_layer=None, neuron_cfg=None):
         super().__init__()
         block = MODELS.get(block_type)
         if norm_layer is None:
             norm_layer = layer.BatchNorm2d
+        if width is None:
+            print(f"[INFO] Using default width `{default_width}`.\n"
+                  "\tfrom `amzcls.models.backbones.spike_resnet`.")
+            width = default_width
         if neuron_cfg is None:
             print(f"[INFO] Using default neuron `{default_neuron}`.\n"
                   "\tfrom `amzcls.models.backbones.spike_preact_resnet`.")
@@ -45,15 +50,15 @@ class SpikePreActResNetCifar(nn.Module):
         self.bn1 = norm_layer(self.inplanes)
         self.sn1 = build_node(neuron_cfg)
         self.layer1 = self._make_layer(
-            block, 32, layers[0], stride=1, neuron_cfg=neuron_cfg)
+            block, width[0], layers[0], stride=1, neuron_cfg=neuron_cfg)
         self.layer2 = self._make_layer(
-            block, 64, layers[1], stride=2, dilate=replace_stride_with_dilation[0], neuron_cfg=neuron_cfg)
+            block, width[1], layers[1], stride=2, dilate=replace_stride_with_dilation[0], neuron_cfg=neuron_cfg)
         self.layer3 = self._make_layer(
-            block, 128, layers[2], stride=2, dilate=replace_stride_with_dilation[1], neuron_cfg=neuron_cfg)
+            block, width[2], layers[2], stride=2, dilate=replace_stride_with_dilation[1], neuron_cfg=neuron_cfg)
         self.layer4 = self._make_layer(
-            block, 256, layers[3], stride=2, dilate=replace_stride_with_dilation[2], neuron_cfg=neuron_cfg)
+            block, width[3], layers[3], stride=2, dilate=replace_stride_with_dilation[2], neuron_cfg=neuron_cfg)
         self.avgpool = layer.AdaptiveAvgPool2d((1, 1))
-        self.fc = layer.Linear(256 * block.expansion, num_classes)
+        self.fc = layer.Linear(width[3] * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, layer.Conv2d):
@@ -67,7 +72,7 @@ class SpikePreActResNetCifar(nn.Module):
         # This improves the model by 0.2~0.3% according to https://arxiv.org/abs/1706.02677
         if zero_init_residual:
             print(f"[INFO] zero init residual: `{zero_init_residual}`.\n"
-                  "\tfrom `amzcls.models.backbones.sew_resnet`.")
+                  "\tfrom `amzcls.models.backbones.spike_preact_resnet`.")
             for m in self.modules():
                 if isinstance(m, Bottleneck):
                     nn.init.constant_(m.bn3.weight, 0)
