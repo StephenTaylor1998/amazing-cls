@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from mmcls.datasets import DATASETS as MMCLS_DATASETS
 from mmcls.datasets import PIPELINES as MMCLS_PIPELINES
-from mmcls.datasets import SAMPLERS as  MMCLS_SAMPLERS
+from mmcls.datasets import SAMPLERS as MMCLS_SAMPLERS
 from mmcv.parallel import collate
 from mmcv.runner import get_dist_info
 from mmcv.utils import Registry, build_from_cfg, digit_version
