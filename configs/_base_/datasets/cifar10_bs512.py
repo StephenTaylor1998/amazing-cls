@@ -24,7 +24,8 @@ data = dict(
     samples_per_gpu=512,
     workers_per_gpu=8,
     train=dict(
-        type=dataset_type, data_prefix='data/cifar10',
+        type=dataset_type,
+        data_prefix='data/cifar10',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
