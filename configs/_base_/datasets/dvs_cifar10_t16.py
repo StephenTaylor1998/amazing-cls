@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'DVSCifar10'
-time_step = 4
+time_step = 16
 
 train_pipeline = [
     # dict(type='RandomCrop', size=32, padding=4),
@@ -23,6 +23,7 @@ data = dict(
         split_by='number',
         test_mode=False,
         data_prefix='/hy-tmp/data/dvs-cifar10',
+        use_ckpt=True,
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
@@ -31,6 +32,7 @@ data = dict(
         split_by='number',
         test_mode=True,
         data_prefix='/hy-tmp/data/dvs-cifar10',
+        use_ckpt=True,
         pipeline=test_pipeline,),
     test=dict(
         type=dataset_type,
@@ -39,4 +41,5 @@ data = dict(
         split_by='number',
         test_mode=True,
         data_prefix='/hy-tmp/data/dvs-cifar10',
+        use_ckpt=True,
         pipeline=test_pipeline,))
