@@ -3,6 +3,10 @@ from .base import (
     DualFlowBasicBlockA, DualFlowBottleneckA, DualFlowBasicBlockB, DualFlowBottleneckB,
     DualFlowBasicBlockC, DualFlowBottleneckC
 )
+from .sew4dvs import (
+    ResNetN4DVS, sew4dvs_gesture, org4dvs_gesture, spk4dvs_gesture, sew4dvs_cifar10,
+    org4dvs_cifar10, spk4dvs_cifar10
+)
 from .spike_df_resnet import DFResNetCifar, df_resnet18c_cifar, df_resnet34c_cifar, df_resnet50c_cifar, \
     df_resnet101c_cifar, df_resnet152c_cifar, df_resnext50c_cifar_32x4d, df_resnext101c_cifar_32x8d, \
     df_wide_resnet50c_cifar_2, df_wide_resnet101c_cifar_2, df_resnet18b_cifar, df_resnet34b_cifar, df_resnet50b_cifar, \
@@ -20,17 +24,18 @@ from .spike_resnet import (
     spike_resnet101_cifar, spike_resnet152_cifar, spike_resnext50_cifar_32x4d,
     spike_resnext101_cifar_32x8d, spike_wide_resnet50_cifar_2, spike_wide_resnet101_cifar_2)
 
-from .spiking import SLeNet5
-
 __all__ = [
     'SEWBasicBlock', 'SEWBottleneck', 'SpikePreActBasicBlock', 'SpikePreActBottleneck',
     'DualFlowBasicBlockA', 'DualFlowBottleneckA', 'DualFlowBasicBlockB', 'DualFlowBottleneckB',
     'DualFlowBasicBlockC', 'DualFlowBottleneckC',
 
+    'ResNetN4DVS', 'sew4dvs_gesture', 'org4dvs_gesture', 'spk4dvs_gesture', 'sew4dvs_cifar10',
+    'org4dvs_cifar10', 'spk4dvs_cifar10',
+
     'SpikeResNetCifar', 'spike_resnet18_cifar', 'spike_resnet34_cifar', 'spike_resnet50_cifar',
     'spike_resnet101_cifar', 'spike_resnet152_cifar', 'spike_resnext50_cifar_32x4d',
     'spike_resnext101_cifar_32x8d', 'spike_wide_resnet50_cifar_2', 'spike_wide_resnet101_cifar_2',
-    
+
     'SpikePreActResNetCifar', 'spike_preact_resnet18_cifar', 'spike_preact_resnet34_cifar',
     'spike_preact_resnet50_cifar', 'spike_preact_resnet101_cifar', 'spike_preact_resnet152_cifar',
     'spike_preact_resnext50_cifar_32x4d', 'spike_preact_resnext101_cifar_32x8d',
