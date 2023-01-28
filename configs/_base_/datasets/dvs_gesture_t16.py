@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'DVSGesture'
-time_step = 4
+time_step = 16
 
 train_pipeline = [
     # dict(type='RandomCrop', size=32, padding=4),
