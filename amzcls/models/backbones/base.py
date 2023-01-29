@@ -29,7 +29,7 @@ def sew_function(cnf: str):
         return lambda x, y: x * (1. - y)
     elif cnf == 'or':
         # 1. - ((1. - x) * (1. - y))
-        return lambda x, y: x + x - x * y
+        return lambda x, y: x + y - x * y
     else:
         raise NotImplementedError
 
