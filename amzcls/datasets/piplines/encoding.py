@@ -24,3 +24,39 @@ class ToTime(object):
                     repeats=2, axis=0)
 
         return results
+
+
+def to_float_tensor(data):
+    """Convert objects of various python types to :obj:`torch.Tensor`.
+
+    Supported types are: :class:`numpy.ndarray`, :class:`torch.Tensor`,
+    :class:`Sequence`, :class:`int` and :class:`float`.
+    """
+    if isinstance(data, torch.Tensor):
+        return torch.FloatTensor(data)
+    elif isinstance(data, np.ndarray):
+        return torch.FloatTensor(torch.from_numpy(data))
+    elif isinstance(data, int):
+        return torch.FloatTensor([data])
+    elif isinstance(data, float):
+        return torch.FloatTensor([data])
+    else:
+        raise TypeError(
+            f'Type {type(data)} cannot be converted to tensor.'
+            'Supported types are: `numpy.ndarray`, `torch.Tensor`, '
+            '`Sequence`, `int` and `float`')
+
+
+@PIPELINES.register_module()
+class ToFloatTensor(object):
+
+    def __init__(self, keys):
+        self.keys = keys
+
+    def __call__(self, results):
+        for key in self.keys:
+            results[key] = to_float_tensor(results[key])
+        return results
+
+    def __repr__(self):
+        return self.__class__.__name__ + f'(keys={self.keys})'
