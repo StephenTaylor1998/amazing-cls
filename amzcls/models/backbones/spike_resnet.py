@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from mmcv.runner import auto_fp16
 from spikingjelly.activation_based import layer, functional
 from torch.hub import load_state_dict_from_url
 from torchvision.models.resnet import model_urls
@@ -22,6 +23,7 @@ class SpikeResNetCifar(nn.Module):
                  groups=1, width_per_group=64, replace_stride_with_dilation=None, norm_layer=None,
                  cnf: str = 'add', neuron_cfg=None):
         super().__init__()
+        self.fp16_enabled = False
         block = MODELS.get(block_type)
         if norm_layer is None:
             norm_layer = layer.BatchNorm2d
@@ -130,6 +132,7 @@ class SpikeResNetCifar(nn.Module):
         x = self.fc(x)
         return (x.mean(0),)
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         return self._forward_impl(x)
 

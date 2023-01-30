@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import torch.nn as nn
+from mmcv.runner import auto_fp16
 from spikingjelly.activation_based import layer
 from spikingjelly.activation_based.model.spiking_resnet import conv3x3, conv1x1
 
@@ -61,7 +62,9 @@ class SEWBasicBlock(BasicBlock):
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         identity = x
 
@@ -111,7 +114,9 @@ class SEWBottleneck(Bottleneck):
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         identity = x
 
@@ -162,7 +167,9 @@ class SpikePreActBasicBlock(BasicBlock):
         self.downsample = downsample
         self.stride = stride
         self.use_res = True
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         identity = x
 
@@ -209,7 +216,9 @@ class SpikePreActBottleneck(Bottleneck):
         self.downsample = downsample
         self.stride = stride
         self.use_res = True
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         identity = x
 
@@ -262,7 +271,9 @@ class DualFlowBasicBlockA(BasicBlock):
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         spike, identity_poten = x
         identity_spike = spike
@@ -318,7 +329,9 @@ class DualFlowBottleneckA(Bottleneck):
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         spike, identity_poten = x
         identity_spike = spike
@@ -378,7 +391,9 @@ class DualFlowBasicBlockB(BasicBlock):
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         spike, identity_poten = x
         identity_spike = spike
@@ -433,7 +448,9 @@ class DualFlowBottleneckB(Bottleneck):
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         spike, identity_poten = x
         identity_spike = spike
@@ -491,7 +508,9 @@ class DualFlowBasicBlockC(BasicBlock):
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         spike, identity_poten = x
         identity_spike = spike
@@ -550,7 +569,9 @@ class DualFlowBottleneckC(Bottleneck):
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x):
         spike, identity_poten = x
         identity_spike = spike
