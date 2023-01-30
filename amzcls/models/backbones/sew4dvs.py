@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from mmcv.runner import auto_fp16
 from spikingjelly.activation_based import layer, functional
 from spikingjelly.activation_based.neuron import ParametricLIFNode, LIFNode
 
@@ -7,12 +8,13 @@ from ..builder import BACKBONES
 
 SNode = ParametricLIFNode
 
+
 # todo replace  `nn.Conv2d` with `layer.Conv2d`
 def conv3x3(in_channels, out_channels):
     return nn.Sequential(
         layer.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, stride=1, bias=False),
         layer.BatchNorm2d(out_channels),
-        SNode(detach_reset=False)
+        SNode(detach_reset=True)
     )
 
 
@@ -20,7 +22,7 @@ def conv1x1(in_channels, out_channels):
     return nn.Sequential(
         layer.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False),
         layer.BatchNorm2d(out_channels),
-        SNode(detach_reset=False)
+        SNode(detach_reset=True)
     )
 
 
@@ -32,7 +34,9 @@ class SEWBlock(nn.Module):
             conv3x3(in_channels, mid_channels),
             conv3x3(mid_channels, in_channels),
         )
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x: torch.Tensor):
         out = self.conv(x)
         if self.connect_f == 'add':
@@ -56,7 +60,9 @@ class PlainBlock(nn.Module):
             conv3x3(in_channels, mid_channels),
             conv3x3(mid_channels, in_channels),
         )
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x: torch.Tensor):
         return self.conv(x)
 
@@ -69,8 +75,10 @@ class BasicBlock(nn.Module):
             layer.Conv2d(mid_channels, in_channels, kernel_size=3, padding=1, stride=1, bias=False),
             layer.BatchNorm2d(in_channels),
         )
-        self.sn = SNode(detach_reset=False)
+        self.sn = SNode(detach_reset=True)
+        self.fp16_enabled = False
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x: torch.Tensor):
         return self.sn(x + self.conv(x))
 
@@ -79,6 +87,7 @@ class BasicBlock(nn.Module):
 class ResNetN4DVS(nn.Module):
     def __init__(self, layer_list, num_classes, connect_f=None):
         super(ResNetN4DVS, self).__init__()
+        self.fp16_enabled = False
         in_channels = 2
         conv = []
 
@@ -137,8 +146,9 @@ class ResNetN4DVS(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
         functional.set_step_mode(self, step_mode='m')
-        # functional.set_backend(self, backend='cupy', instance=SNode)
+        functional.set_backend(self, backend='cupy', instance=SNode)
 
+    @auto_fp16(apply_to=('x',))
     def forward(self, x: torch.Tensor):
         functional.reset_net(self)
         x = torch.permute(x, (1, 0, 2, 3, 4))
