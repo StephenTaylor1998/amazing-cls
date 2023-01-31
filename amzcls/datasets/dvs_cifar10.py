@@ -1,10 +1,10 @@
+import copy
 import math
 import os.path
 import pickle
 import numpy as np
 import torch
 from mmcls.datasets import BaseDataset
-# from spikingjelly.datasets import split_to_train_test_set
 from spikingjelly.datasets.cifar10_dvs import CIFAR10DVS
 from tqdm import tqdm
 
@@ -16,6 +16,7 @@ __all__ = ['DVSCifar10']
 @DATASETS.register_module()
 class DVSCifar10(BaseDataset):
     data_infos = None
+    pipeline = None
 
     def __init__(self, data_prefix, test_mode, time_step, data_type='frame',
                  split_by='number', use_ckpt=False, *args, **kwargs):
@@ -34,6 +35,11 @@ class DVSCifar10(BaseDataset):
     def load_annotations(self):
         print(f'[INFO] [AMZCLS] Loading {"testing" if self.test_mode else "training"} annotations...')
         return self.data_infos
+
+    def prepare_data(self, idx):
+        data_info = copy.deepcopy(self.data_infos[idx])
+        data_info['img'] = load_npz(data_info['img'])
+        return self.pipeline(data_info)
 
 
 dvs_dataset = None
@@ -58,8 +64,8 @@ def dvs_cifar10_indices(train_ratio: float, test_mode):
     return test_indices if test_mode else train_indices
 
 
-# def load_npz(file_name, data_type='frames'):
-#     return np.load(file_name, allow_pickle=True)[data_type].astype(np.float32)
+def load_npz(file_name, data_type='frames'):
+    return np.load(file_name, allow_pickle=True)[data_type].astype(np.float32)
 
 
 # implement without checkpoint
@@ -70,7 +76,7 @@ def load_data_infos(dvs_dataset, dataset_indices, unpack=True):
         for index in tqdm(class_indices):
             sample = dvs_dataset.samples[index]
             class_infos.append({
-                'img': np.load(sample[0], allow_pickle=True)['frames'].astype(np.float32),
+                'img': sample[0],
                 'gt_label': np.array(sample[1], dtype=np.int64)
             })
         sort_by_class.append(class_infos)
