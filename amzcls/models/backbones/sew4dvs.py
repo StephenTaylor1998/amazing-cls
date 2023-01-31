@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from mmcv.runner import auto_fp16
 from spikingjelly.activation_based import layer, functional
-from spikingjelly.activation_based.neuron import ParametricLIFNode, LIFNode
+from spikingjelly.activation_based.neuron import ParametricLIFNode
 
 from ..builder import BACKBONES
 

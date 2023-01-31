@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 from mmcls.datasets import BaseDataset
 from spikingjelly.datasets.dvs128_gesture import DVS128Gesture
@@ -9,6 +11,8 @@ __all__ = ['DVSGesture']
 
 @DATASETS.register_module()
 class DVSGesture(BaseDataset):
+    pipeline = None
+
     def __init__(self, data_prefix, test_mode, time_step, data_type='frame', split_by='number', *args, **kwargs):
         self.time_step = time_step
         self.data_type = data_type
@@ -17,7 +21,7 @@ class DVSGesture(BaseDataset):
         self.data_infos = []
         for sample in dvs_dataset.samples:
             self.data_infos.append({
-                'img': load_npz(sample[0]),
+                'img': sample[0],
                 'gt_label': np.array(sample[1], dtype=np.int64)  # todo: 2023-01-26
             })
         super(DVSGesture, self).__init__(data_prefix=data_prefix, test_mode=test_mode, *args, **kwargs)
@@ -25,6 +29,11 @@ class DVSGesture(BaseDataset):
     def load_annotations(self):
         print('[INFO] [AMZCLS] Loading annotations...')
         return self.data_infos
+
+    def prepare_data(self, idx):
+        data_info = copy.deepcopy(self.data_infos[idx])
+        data_info['img'] = load_npz(data_info['img'])
+        return self.pipeline(data_info)
 
 
 def load_npz(file_name, data_type='frames'):
@@ -50,7 +59,7 @@ def load_dvs_gesture(data_prefix, test_mode, time_step, data_type='frame', split
     else:
         global dvs_train_dataset
         if dvs_train_dataset is None:
-            dvs_train_dataset =  DVS128Gesture(
+            dvs_train_dataset = DVS128Gesture(
                 root=data_prefix,
                 train=True,
                 data_type=data_type,
@@ -58,5 +67,3 @@ def load_dvs_gesture(data_prefix, test_mode, time_step, data_type='frame', split
                 split_by=split_by)
             print(f'[INFO] [AMZCLS] Processing training dataset...')
         return dvs_train_dataset
-
-
