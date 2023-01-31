@@ -1,6 +1,8 @@
 # 2023-01-20
-import torch
+import random
+
 import numpy as np
+import torch
 
 from ..builder import PIPELINES
 
@@ -56,6 +58,27 @@ class ToFloatTensor(object):
     def __call__(self, results):
         for key in self.keys:
             results[key] = to_float_tensor(results[key])
+        return results
+
+    def __repr__(self):
+        return self.__class__.__name__ + f'(keys={self.keys})'
+
+
+@PIPELINES.register_module()
+class TimeSample(object):
+
+    def __init__(self, keys, time_step: int, sample_step: int):
+        self.keys = keys
+        self.time_step = time_step
+        self.sample_step = sample_step
+
+    def __call__(self, results):
+        indices = random.sample(
+            range(self.time_step), self.sample_step
+        )
+        indices.sort()
+        for k in self.keys:
+            results[k] = results[k][indices]
         return results
 
     def __repr__(self):
