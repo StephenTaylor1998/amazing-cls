@@ -2,14 +2,14 @@ import torch
 import torch.nn as nn
 from mmcv.runner import auto_fp16
 from spikingjelly.activation_based import layer, functional
-from spikingjelly.activation_based.neuron import ParametricLIFNode
+from spikingjelly.activation_based.neuron import ParametricLIFNode, IFNode
 
 from ..builder import BACKBONES
 
 SNode = ParametricLIFNode
+# SNode = IFNode
 
 
-# todo replace  `nn.Conv2d` with `layer.Conv2d`
 def conv3x3(in_channels, out_channels):
     return nn.Sequential(
         layer.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, stride=1, bias=False),
@@ -27,7 +27,7 @@ def conv1x1(in_channels, out_channels):
 
 
 class SEWBlock(nn.Module):
-    def __init__(self, in_channels, mid_channels, connect_f=None):
+    def __init__(self, in_channels, mid_channels, connect_f='add'):
         super(SEWBlock, self).__init__()
         self.connect_f = connect_f
         self.conv = nn.Sequential(
@@ -49,7 +49,6 @@ class SEWBlock(nn.Module):
             out = x + out - x * out
         else:
             raise NotImplementedError(self.connect_f)
-        # out = x * self.conv(x)
         return out
 
 
@@ -83,12 +82,36 @@ class BasicBlock(nn.Module):
         return self.sn(x + self.conv(x))
 
 
+class SPABlock(nn.Module):
+    def __init__(self, in_channels, mid_channels):
+        super(SPABlock, self).__init__()
+        self.bn1 = layer.BatchNorm2d(mid_channels)
+        self.sn1 = SNode(detach_reset=True)
+        self.conv1 = layer.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, stride=1, bias=False)
+        self.bn2 = layer.BatchNorm2d(mid_channels)
+        self.sn2 = SNode(detach_reset=True)
+        self.conv2 = layer.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, stride=1, bias=False)
+        self.fp16_enabled = False
+
+    @auto_fp16(apply_to=('x',))
+    def forward(self, x):
+        identity = x
+        out = self.bn1(x)
+        out = self.sn1(out)
+        out = self.conv1(out)
+        out = self.bn2(out)
+        out = self.sn2(out)
+        out = self.conv2(out)
+        out += identity
+        return out
+
+
 @BACKBONES.register_module()
 class ResNetN4DVS(nn.Module):
-    def __init__(self, layer_list, num_classes, connect_f=None):
+    def __init__(self, layer_list, num_classes, connect_f='add', in_channels=2, HW=128):
         super(ResNetN4DVS, self).__init__()
         self.fp16_enabled = False
-        in_channels = 2
+        in_channels = in_channels
         conv = []
 
         for cfg_dict in layer_list:
@@ -120,6 +143,9 @@ class ResNetN4DVS(nn.Module):
                 elif cfg_dict['block_type'] == 'basic':
                     for _ in range(num_blocks):
                         conv.append(BasicBlock(in_channels, mid_channels))
+                elif cfg_dict['block_type'] == 'spa':
+                    for _ in range(num_blocks):
+                        conv.append(SPABlock(in_channels, mid_channels))
                 else:
                     raise NotImplementedError
 
@@ -131,7 +157,7 @@ class ResNetN4DVS(nn.Module):
 
         self.conv = nn.Sequential(*conv)
         with torch.no_grad():
-            x = torch.zeros([1, 2, 128, 128])
+            x = torch.zeros([1, 2, HW, HW])
             for m in self.conv.modules():
                 if isinstance(m, layer.MaxPool2d):
                     x = m(x)
@@ -157,8 +183,9 @@ class ResNetN4DVS(nn.Module):
         return self.out(x.mean(0))
 
 
+# DVS GESTURE
 @BACKBONES.register_module()
-def sew4dvs_gesture(cnf: str):
+def sew4dvs_gesture(cnf: str, *args, **kwargs):
     layer_list = [
         {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'sew', 'k_pool': 2},
         {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'sew', 'k_pool': 2},
@@ -169,7 +196,7 @@ def sew4dvs_gesture(cnf: str):
         {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'sew', 'k_pool': 2},
     ]
     num_classes = 11
-    return ResNetN4DVS(layer_list, num_classes, cnf)
+    return ResNetN4DVS(layer_list, num_classes, cnf, *args, **kwargs)
 
 
 @BACKBONES.register_module()
@@ -184,7 +211,7 @@ def org4dvs_gesture(*args, **kwargs):
         {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'plain', 'k_pool': 2},
     ]
     num_classes = 11
-    return ResNetN4DVS(layer_list, num_classes)
+    return ResNetN4DVS(layer_list, num_classes, *args, **kwargs)
 
 
 @BACKBONES.register_module()
@@ -199,11 +226,27 @@ def spk4dvs_gesture(*args, **kwargs):
         {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'basic', 'k_pool': 2},
     ]
     num_classes = 11
-    return ResNetN4DVS(layer_list, num_classes)
+    return ResNetN4DVS(layer_list, num_classes, *args, **kwargs)
 
 
 @BACKBONES.register_module()
-def sew4dvs_cifar10(cnf):
+def spa4dvs_gesture(*args, **kwargs):
+    layer_list = [
+        {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 32, 'up_kernel_size': 1, 'mid_channels': 32, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+    ]
+    num_classes = 11
+    return ResNetN4DVS(layer_list, num_classes, *args, **kwargs)
+
+
+# DVS CIFAR10
+@BACKBONES.register_module()
+def sew4dvs_cifar10(cnf, *args, **kwargs):
     layer_list = [
         {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'sew', 'k_pool': 2},
         {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'sew', 'k_pool': 2},
@@ -214,7 +257,7 @@ def sew4dvs_cifar10(cnf):
         {'channels': 128, 'up_kernel_size': 1, 'mid_channels': 128, 'num_blocks': 1, 'block_type': 'sew', 'k_pool': 2},
     ]
     num_classes = 10
-    return ResNetN4DVS(layer_list, num_classes, cnf)
+    return ResNetN4DVS(layer_list, num_classes, cnf, *args, **kwargs)
 
 
 @BACKBONES.register_module()
@@ -232,7 +275,7 @@ def org4dvs_cifar10(*args, **kwargs):
          'k_pool': 2},
     ]
     num_classes = 10
-    return ResNetN4DVS(layer_list, num_classes)
+    return ResNetN4DVS(layer_list, num_classes, *args, **kwargs)
 
 
 @BACKBONES.register_module()
@@ -250,4 +293,74 @@ def spk4dvs_cifar10(*args, **kwargs):
          'k_pool': 2},
     ]
     num_classes = 10
-    return ResNetN4DVS(layer_list, num_classes)
+    return ResNetN4DVS(layer_list, num_classes, *args, **kwargs)
+
+
+@BACKBONES.register_module()
+def spa4dvs_cifar10(*args, **kwargs):
+    layer_list = [
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 128, 'up_kernel_size': 1, 'mid_channels': 128, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 128, 'up_kernel_size': 1, 'mid_channels': 128, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 128, 'up_kernel_size': 1, 'mid_channels': 128, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+    ]
+    num_classes = 10
+    return ResNetN4DVS(layer_list, num_classes, *args, **kwargs)
+
+
+# TimeSeqDataset
+@BACKBONES.register_module()
+def sew4tsd(cnf, *args, **kwargs):
+    layer_list = [
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 16, 'num_blocks': 1, 'block_type': 'sew', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 16, 'num_blocks': 1, 'block_type': 'sew', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 16, 'num_blocks': 1, 'block_type': 'sew', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 16, 'num_blocks': 1, 'block_type': 'sew', 'k_pool': 2},
+    ]
+    num_classes = 4
+    return ResNetN4DVS(layer_list, num_classes, cnf, HW=16, *args, **kwargs)
+
+
+@BACKBONES.register_module()
+def org4tsd(*args, **kwargs):
+    layer_list = [
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'plain', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'plain', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'plain', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'plain', 'k_pool': 2},
+        {'channels': 128, 'up_kernel_size': 1, 'mid_channels': 128, 'num_blocks': 1, 'block_type': 'plain',
+         'k_pool': 2},
+        {'channels': 128, 'up_kernel_size': 1, 'mid_channels': 128, 'num_blocks': 1, 'block_type': 'plain',
+         'k_pool': 2},
+        {'channels': 128, 'up_kernel_size': 1, 'mid_channels': 128, 'num_blocks': 1, 'block_type': 'plain',
+         'k_pool': 2},
+    ]
+    num_classes = 4
+    return ResNetN4DVS(layer_list, num_classes, HW=16, *args, **kwargs)
+
+
+@BACKBONES.register_module()
+def spk4tsd(*args, **kwargs):
+    layer_list = [
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'basic', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'basic', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'basic', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'basic', 'k_pool': 2},
+    ]
+    num_classes = 4
+    return ResNetN4DVS(layer_list, num_classes, HW=16, *args, **kwargs)
+
+
+@BACKBONES.register_module()
+def spa4tsd(*args, **kwargs):
+    layer_list = [
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+        {'channels': 64, 'up_kernel_size': 1, 'mid_channels': 64, 'num_blocks': 1, 'block_type': 'spa', 'k_pool': 2},
+    ]
+    num_classes = 4
+    return ResNetN4DVS(layer_list, num_classes, HW=16, *args, **kwargs)
