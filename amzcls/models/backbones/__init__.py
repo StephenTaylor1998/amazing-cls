@@ -3,9 +3,13 @@ from .base import (
     DualFlowBasicBlockA, DualFlowBottleneckA, DualFlowBasicBlockB, DualFlowBottleneckB,
     DualFlowBasicBlockC, DualFlowBottleneckC
 )
+from .plain_net import PlainNet
+
 from .sew4dvs import (
-    ResNetN4DVS, sew4dvs_gesture, org4dvs_gesture, spk4dvs_gesture, sew4dvs_cifar10,
-    org4dvs_cifar10, spk4dvs_cifar10
+    ResNetN4DVS,
+    sew4dvs_gesture, org4dvs_gesture, spk4dvs_gesture, spa4dvs_gesture,
+    sew4dvs_cifar10, org4dvs_cifar10, spk4dvs_cifar10, spa4dvs_cifar10,
+    sew4tsd, org4tsd, spk4tsd, spa4tsd
 )
 from .spike_df_resnet import DFResNetCifar, df_resnet18c_cifar, df_resnet34c_cifar, df_resnet50c_cifar, \
     df_resnet101c_cifar, df_resnet152c_cifar, df_resnext50c_cifar_32x4d, df_resnext101c_cifar_32x8d, \
@@ -29,8 +33,12 @@ __all__ = [
     'DualFlowBasicBlockA', 'DualFlowBottleneckA', 'DualFlowBasicBlockB', 'DualFlowBottleneckB',
     'DualFlowBasicBlockC', 'DualFlowBottleneckC',
 
-    'ResNetN4DVS', 'sew4dvs_gesture', 'org4dvs_gesture', 'spk4dvs_gesture', 'sew4dvs_cifar10',
-    'org4dvs_cifar10', 'spk4dvs_cifar10',
+    'PlainNet',
+
+    'ResNetN4DVS',
+    'sew4dvs_gesture', 'org4dvs_gesture', 'spk4dvs_gesture', 'spa4dvs_gesture',
+    'sew4dvs_cifar10', 'org4dvs_cifar10', 'spk4dvs_cifar10', 'spa4dvs_cifar10',
+    'sew4tsd', 'org4tsd', 'spk4tsd', 'spa4tsd',
 
     'SpikeResNetCifar', 'spike_resnet18_cifar', 'spike_resnet34_cifar', 'spike_resnet50_cifar',
     'spike_resnet101_cifar', 'spike_resnet152_cifar', 'spike_resnext50_cifar_32x4d',
