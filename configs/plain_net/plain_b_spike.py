@@ -4,8 +4,11 @@ _base_ = [
     '../_base_/schedules/cifar10_bs128.py'
 ]
 
-# T1=79.7400%
-# T4=84.9800%
+# [2, 2, 2, 2]
+# SGD-200 T1=82.0200%
+# SGD-200 T2=85.0700%
+# SGD-200 T3=87.0200%
+# SGD-200 T4=88.0400%
 model = dict(
     backbone=dict(
         type='PlainNet',
@@ -30,7 +33,7 @@ model = dict(
 
 # dataset settings
 dataset_type = 'CIFAR10'
-time_step = 4
+time_step = 3
 img_norm_cfg = dict(
     mean=[125.307, 122.961, 113.8575],
     std=[51.5865, 50.847, 51.255],
