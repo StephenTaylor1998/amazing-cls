@@ -25,7 +25,7 @@ def analog(inplanes, planes, stride=1, neuron_cfg=None):
 
 
 def get_by_name(type_name):
-    if type_name == 'spike':
+    if type_name == 'digital':
         return spike
     elif type_name == 'analog':
         return analog
@@ -61,7 +61,7 @@ class PlainNet(nn.Module):
         bn = layer.BatchNorm2d(channels[0])
         sn = build_node(neuron_cfg)
         layers = make_layers(channels, block_in_layers, down_samples, block_type, rate, use_res, neuron_cfg)
-        if block_type == 'spike':
+        if block_type == 'digital':
             self.layers = nn.Sequential(conv, bn, sn, layers)
         elif block_type == 'analog':
             self.layers = nn.Sequential(conv, bn, layers, sn)

@@ -9,12 +9,17 @@ _base_ = [
 # SGD-200 T2=85.2800%
 # SGD-200 T3=86.8500%
 # SGD-200 T4=88.0600%
+# [4, 4, 4, 4]
+# SGD-200 T1=%
+# SGD-200 T2=%
+# SGD-200 T3=%
+# SGD-200 T4=%
 model = dict(
     backbone=dict(
         type='PlainNet',
         in_channel=3,
         channels=[32, 32, 32, 32],
-        block_in_layers=[2, 2, 2, 2],
+        block_in_layers=[1, 1, 1, 1],
         down_samples=[1, 2, 2, 2],
         num_classes=10,
         block_type='analog',
@@ -33,7 +38,7 @@ model = dict(
 
 # dataset settings
 dataset_type = 'CIFAR10'
-time_step = 3
+time_step = 1
 img_norm_cfg = dict(
     mean=[125.307, 122.961, 113.8575],
     std=[51.5865, 50.847, 51.255],
