@@ -13,12 +13,14 @@ _base_ = [
 # SGD-200 T1=86.4800%
 # [6, 6, 6, 6]
 # SGD-200 T1=86.7600%
+rate = 0.5
+ch = int(rate * 16)
 model = dict(
     backbone=dict(
         type='PlainNet',
         in_channel=3,
-        channels=[16, 16, 16, 16],
-        block_in_layers=[1, 1, 1, 1],
+        channels=[ch, ch, ch, ch],
+        block_in_layers=[2, 2, 2, 2],
         down_samples=[1, 2, 2, 2],
         num_classes=10,
         block_type='digital',
