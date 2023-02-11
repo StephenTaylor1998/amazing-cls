@@ -10,16 +10,15 @@ _base_ = [
 # SGD-200 T3=86.8600%
 # SGD-200 T4=88.2600%
 # [4, 4, 4, 4]
-# SGD-200 T1=%
-# SGD-200 T2=%
-# SGD-200 T3=%
-# SGD-200 T4=%
+
+rate = 1.0
+ch = int(rate * 32)
 model = dict(
     backbone=dict(
         type='PlainNet',
         in_channel=3,
-        channels=[32, 32, 32, 32],
-        block_in_layers=[1, 1, 1, 1],
+        channels=[ch, ch, ch, ch],
+        block_in_layers=[6, 6, 6, 6],
         down_samples=[1, 2, 2, 2],
         num_classes=10,
         block_type='digital',
