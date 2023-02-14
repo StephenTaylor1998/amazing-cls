@@ -7,7 +7,7 @@ _base_ = [
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='org4dvs_gesture'
+        type='spa4dvs_gesture'
     ),
     head=dict(
         type='ClsHead',
