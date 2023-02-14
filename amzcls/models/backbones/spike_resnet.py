@@ -19,7 +19,7 @@ default_width = [64, 128, 256, 512]
 
 @BACKBONES.register_module()
 class SpikeResNetCifar(nn.Module):
-    def __init__(self, block_type, layers, width=None, num_classes=10, in_channels=3, zero_init_residual=False,
+    def __init__(self, block_type, layers: list, width: list=None, num_classes=10, in_channels=3, zero_init_residual=False,
                  groups=1, width_per_group=64, replace_stride_with_dilation=None, norm_layer=None,
                  cnf: str = 'add', neuron_cfg=None):
         super().__init__()

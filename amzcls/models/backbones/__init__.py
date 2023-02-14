@@ -28,6 +28,7 @@ from .spike_resnet import (
     spike_resnet101_cifar, spike_resnet152_cifar, spike_resnext50_cifar_32x4d,
     spike_resnext101_cifar_32x8d, spike_wide_resnet50_cifar_2, spike_wide_resnet101_cifar_2)
 
+
 __all__ = [
     'SEWBasicBlock', 'SEWBottleneck', 'SpikePreActBasicBlock', 'SpikePreActBottleneck',
     'DualFlowBasicBlockA', 'DualFlowBottleneckA', 'DualFlowBasicBlockB', 'DualFlowBottleneckB',
@@ -58,5 +59,6 @@ __all__ = [
     'df_resnext101b_cifar_32x8d', 'df_wide_resnet50b_cifar_2', 'df_wide_resnet101b_cifar_2',
     'df_resnet18a_cifar', 'df_resnet34a_cifar', 'df_resnet50a_cifar',
     'df_resnet101a_cifar', 'df_resnet152a_cifar', 'df_resnext50a_cifar_32x4d',
-    'df_resnext101a_cifar_32x8d', 'df_wide_resnet50a_cifar_2', 'df_wide_resnet101a_cifar_2'
+    'df_resnext101a_cifar_32x8d', 'df_wide_resnet50a_cifar_2', 'df_wide_resnet101a_cifar_2',
+
 ]
