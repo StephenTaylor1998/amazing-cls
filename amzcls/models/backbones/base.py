@@ -40,7 +40,7 @@ class SEWBasicBlock(BasicBlock):
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None, cnf: str = None,
+                 base_width=64, dilation=1, norm_layer=None, cnf: str = 'add',
                  neuron_cfg=None):
         super(SEWBasicBlock, self).__init__()
         if norm_layer is None:
@@ -92,7 +92,7 @@ class SEWBottleneck(Bottleneck):
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None, cnf: str = None,
+                 base_width=64, dilation=1, norm_layer=None, cnf: str = 'add',
                  neuron_cfg=None):
         super(SEWBottleneck, self).__init__()
         if norm_layer is None:
