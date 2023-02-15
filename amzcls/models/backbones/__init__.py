@@ -4,8 +4,9 @@ from .base import (
     DualFlowBasicBlockC, DualFlowBottleneckC
 )
 from .plain_net import (
-    PlainDigital, PlainDigitalA, PlainDigitalB, PlainDigitalC,
-    PlainAnalog, PlainAnalogA, PlainAnalogB, PlainAnalogC
+    PlainDigital, BlockA222, BlockA414, BlockA141,
+    PlainAnalog, BlockB222, BlockB414, BlockB141,
+    PlainAnalogV2, BlockC222, BlockC414, BlockC141
 )
 
 from .sew4dvs import (
@@ -38,8 +39,9 @@ __all__ = [
     'DualFlowBasicBlockA', 'DualFlowBottleneckA', 'DualFlowBasicBlockB', 'DualFlowBottleneckB',
     'DualFlowBasicBlockC', 'DualFlowBottleneckC',
 
-    'PlainDigital', 'PlainDigitalA', 'PlainDigitalB', 'PlainDigitalC',
-    'PlainAnalog', 'PlainAnalogA', 'PlainAnalogB', 'PlainAnalogC',
+    'PlainDigital', 'BlockA222', 'BlockA414', 'BlockA141',
+    'PlainAnalog', 'BlockB222', 'BlockB414', 'BlockB141',
+    'PlainAnalogV2', 'BlockC222', 'BlockC414', 'BlockC141',
 
     'ResNetN4DVS',
     'sew4dvs_gesture', 'org4dvs_gesture', 'spk4dvs_gesture', 'spa4dvs_gesture',
