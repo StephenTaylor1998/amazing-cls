@@ -6,6 +6,7 @@ model = dict(
         block_type='DualFlowBasicBlockB',
         layers=[2, 2, 2, 2],
         width=[64, 128, 256, 512],
+        stride=[1, 2, 2, 2],
         num_classes=10,
         in_channels=3,
         zero_init_residual=True,

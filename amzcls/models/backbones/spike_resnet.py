@@ -15,13 +15,14 @@ __all__ = ['SpikeResNetCifar', 'spike_resnet18_cifar', 'spike_resnet34_cifar', '
 
 default_neuron = dict(type='IFNode')
 default_width = [64, 128, 256, 512]
+default_stride = [1, 2, 2, 2]
 
 
 @BACKBONES.register_module()
 class SpikeResNetCifar(nn.Module):
-    def __init__(self, block_type, layers: list, width: list=None, num_classes=10, in_channels=3, zero_init_residual=False,
-                 groups=1, width_per_group=64, replace_stride_with_dilation=None, norm_layer=None,
-                 cnf: str = 'add', neuron_cfg=None):
+    def __init__(self, block_type, layers: list, width: list=None, stride: list = None, num_classes=10,
+                 in_channels=3, zero_init_residual=False, groups=1, width_per_group=64,
+                 replace_stride_with_dilation=None, norm_layer=None, cnf: str = 'add', neuron_cfg=None):
         super().__init__()
         self.fp16_enabled = False
         block = MODELS.get(block_type)
@@ -31,6 +32,10 @@ class SpikeResNetCifar(nn.Module):
             print(f"[INFO] Using default width `{default_width}`.\n"
                   "\tfrom `amzcls.models.backbones.spike_resnet`.")
             width = default_width
+        if stride is None:
+            print(f"[INFO] Using default width `{default_stride}`.\n"
+                  "\tfrom `amzcls.models.backbones.spike_resnet`.")
+            stride = default_stride
         if neuron_cfg is None:
             print(f"[INFO] Using default neuron `{default_neuron}`.\n"
                   "\tfrom `amzcls.models.backbones.spike_resnet`.")
@@ -52,13 +57,13 @@ class SpikeResNetCifar(nn.Module):
         self.bn1 = norm_layer(self.inplanes)
         self.sn1 = build_node(neuron_cfg)
         self.layer1 = self._make_layer(
-            block, width[0], layers[0], stride=1, cnf=cnf, neuron_cfg=neuron_cfg)
+            block, width[0], layers[0], stride[0], cnf=cnf, neuron_cfg=neuron_cfg)
         self.layer2 = self._make_layer(
-            block, width[1], layers[1], stride=2, dilate=replace_stride_with_dilation[0], cnf=cnf, neuron_cfg=neuron_cfg)
+            block, width[1], layers[1], stride[1], dilate=replace_stride_with_dilation[0], cnf=cnf, neuron_cfg=neuron_cfg)
         self.layer3 = self._make_layer(
-            block, width[2], layers[2], stride=2, dilate=replace_stride_with_dilation[1], cnf=cnf, neuron_cfg=neuron_cfg)
+            block, width[2], layers[2], stride[2], dilate=replace_stride_with_dilation[1], cnf=cnf, neuron_cfg=neuron_cfg)
         self.layer4 = self._make_layer(
-            block, width[3], layers[3], stride=2, dilate=replace_stride_with_dilation[2], cnf=cnf, neuron_cfg=neuron_cfg)
+            block, width[3], layers[3], stride[3], dilate=replace_stride_with_dilation[2], cnf=cnf, neuron_cfg=neuron_cfg)
         self.avgpool = layer.AdaptiveAvgPool2d((1, 1))
         self.fc = layer.Linear(width[3] * block.expansion, num_classes)
 
@@ -99,8 +104,8 @@ class SpikeResNetCifar(nn.Module):
 
         layers = []
         layers.append(block(
-            self.inplanes, planes, stride, downsample, self.groups, self.base_width,
-            previous_dilation, norm_layer, cnf, neuron_cfg))
+            self.inplanes, planes, stride, downsample, groups=self.groups, base_width=self.base_width,
+                dilation=self.dilation, norm_layer=norm_layer, cnf=cnf, neuron_cfg=neuron_cfg))
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
             layers.append(block(
@@ -146,6 +151,11 @@ def _resnet_cifar(arch, pretrained, progress, **kwargs):
         state_dict.pop('fc.bias')
         model.load_state_dict(state_dict, strict=False)
     return model
+
+
+@BACKBONES.register_module()
+def spike_resnet_cifar(*args, **kwargs):
+    return SpikeResNetCifar(*args, **kwargs)
 
 
 @BACKBONES.register_module()

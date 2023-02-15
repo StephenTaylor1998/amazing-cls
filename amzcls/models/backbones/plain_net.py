@@ -1,107 +1,206 @@
-import torch
-import torch.nn as nn
 from mmcv.runner import auto_fp16
-from spikingjelly.activation_based import layer, functional
+from spikingjelly.activation_based import layer
 from spikingjelly.activation_based.model.spiking_resnet import conv3x3
 
-from ..builder import BACKBONES
-from ..neurons import build_node, NODES
+from .base import BasicBlock
+from ..builder import MODELS
+from ..neurons import build_node
 
 
-def spike(inplanes, planes, stride=1, neuron_cfg=None):
-    return nn.Sequential(
-        conv3x3(inplanes, planes, stride),
-        layer.BatchNorm2d(planes),
-        build_node(neuron_cfg)
-    )
+@MODELS.register_module()
+class PlainDigital(BasicBlock):
+    expansion = 1
 
-
-def analog(inplanes, planes, stride=1, neuron_cfg=None):
-    return nn.Sequential(
-        build_node(neuron_cfg),
-        conv3x3(inplanes, planes, stride),
-        layer.BatchNorm2d(planes)
-    )
-
-
-def get_by_name(type_name):
-    if type_name == 'digital':
-        return spike
-    elif type_name == 'analog':
-        return analog
-    else:
-        raise NotImplemented
-
-
-class Block(nn.Module):
-    def __init__(self, block_type, inplanes, planes, rate=1., use_res=True, neuron_cfg=None):
-        super(Block, self).__init__()
+    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1, base_width=64,
+                 dilation=1, norm_layer=None, rate=1., neuron_cfg=None, **kwargs):
+        super(PlainDigital, self).__init__()
+        if norm_layer is None:
+            norm_layer = layer.BatchNorm2d
+        if groups != 1 or base_width != 64:
+            raise ValueError('BasicBlock only supports groups=1 and base_width=64')
+        if dilation > 1:
+            raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
+        # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         mid = int(inplanes * rate)
-        conv = get_by_name(block_type)
-        self.conv1 = conv(inplanes, mid, neuron_cfg=neuron_cfg)
-        self.conv2 = conv(mid, planes, neuron_cfg=neuron_cfg)
-        self.func = lambda _x, _y: _x + _y if use_res else lambda _x, _y: _x
+        self.conv1 = conv3x3(inplanes, mid, stride)
+        self.bn1 = norm_layer(mid)
+        self.sn1 = build_node(neuron_cfg)
+        self.conv2 = conv3x3(mid, planes)
+        self.bn2 = norm_layer(planes)
+        self.sn2 = build_node(neuron_cfg)
+        self.downsample = downsample
+        if downsample is not None:
+            self.downsample_sn = build_node(neuron_cfg)
+        self.stride = stride
         self.fp16_enabled = False
 
     @auto_fp16(apply_to=('x',))
     def forward(self, x):
+        identity = x
+
+        if self.downsample is not None:
+            identity = self.downsample_sn(self.downsample(x))
+
         out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.sn1(out)
         out = self.conv2(out)
-        # out = x + out if use_res else x
-        out = self.func(x, out)
+        out = self.bn2(out)
+        out = self.sn2(out)
+        out = identity + out
         return out
 
 
-@BACKBONES.register_module()
-class PlainNet(nn.Module):
-    def __init__(self, in_channel, channels: list, block_in_layers: list, down_samples: list,
-                 num_classes, block_type, rate=1., use_res=True, neuron_cfg=None):
-        super(PlainNet, self).__init__()
-        conv = layer.Conv2d(in_channel, channels[0], (3, 3), padding=1)
-        bn = layer.BatchNorm2d(channels[0])
-        sn = build_node(neuron_cfg)
-        layers = make_layers(channels, block_in_layers, down_samples, block_type, rate, use_res, neuron_cfg)
-        if block_type == 'digital':
-            self.layers = nn.Sequential(conv, bn, sn, layers)
-        elif block_type == 'analog':
-            self.layers = nn.Sequential(conv, bn, layers, sn)
-        else:
-            raise NotImplemented
-        self.avgpool = layer.AdaptiveAvgPool2d((1, 1))
-        self.fc = layer.Linear(channels[-1], num_classes)
+@MODELS.register_module()
+class PlainAnalog(BasicBlock):
+    expansion = 1
+
+    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1, base_width=64,
+                 dilation=1, norm_layer=None, rate=1., neuron_cfg=None, **kwargs):
+        super(PlainAnalog, self).__init__()
+        if norm_layer is None:
+            norm_layer = layer.BatchNorm2d
+        if groups != 1 or base_width != 64:
+            raise ValueError('BasicBlock only supports groups=1 and base_width=64')
+        if dilation > 1:
+            raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
+        # Both self.conv1 and self.downsample layers downsample the input when stride != 1
+        mid = int(inplanes * rate)
+        self.bn1 = norm_layer(inplanes)
+        self.sn1 = build_node(neuron_cfg)
+        self.conv1 = conv3x3(inplanes, mid, stride)
+
+        self.bn2 = norm_layer(mid)
+        self.sn2 = build_node(neuron_cfg)
+        self.conv2 = conv3x3(mid, planes)
+
+        self.downsample = downsample
+        self.stride = stride
         self.fp16_enabled = False
-        functional.set_step_mode(self, 'm')
-        functional.set_backend(self, backend='cupy', instance=NODES.get(neuron_cfg['type']))
 
     @auto_fp16(apply_to=('x',))
     def forward(self, x):
-        functional.reset_net(self)
-        x = torch.permute(x, (1, 0, 2, 3, 4))
+        identity = x
 
-        x = self.layers(x)
-        x = self.avgpool(x)
-        if self.avgpool.step_mode == 's':
-            x = torch.flatten(x, 1)
-        elif self.avgpool.step_mode == 'm':
-            x = torch.flatten(x, 2)
+        if self.downsample is not None:
+            identity = self.downsample(x)
 
-        x = self.fc(x)
-        return x.mean(0)
+        out = self.bn1(x)
+        out = self.sn1(out)
+        out = self.conv1(out)
 
-
-def make_blocks(block_type, inplanes, rate, use_res, neuron_cfg, num_blocks):
-    blocks = [Block(block_type, inplanes, inplanes, rate, use_res, neuron_cfg) for _ in range(num_blocks)]
-    return nn.Sequential(*blocks)
+        out = self.bn2(out)
+        out = self.sn2(out)
+        out = self.conv2(out)
+        out = identity + out
+        return out
 
 
-def make_layers(channels, block_in_layers, down_samples, block_type, rate, use_res, neuron_cfg):
-    layers = []
-    index, in_channel = 0, 0
-    for channel, num_blocks, down_sample in zip(channels, block_in_layers, down_samples):
-        if index > 0:
-            conv = get_by_name(block_type)
-            layers.append(conv(in_channel, channel, down_sample, neuron_cfg))
-        layers.append(make_blocks(block_type, channel, rate, use_res, neuron_cfg, num_blocks))
-        in_channel = channel
-        index += 1
-    return nn.Sequential(*layers)
+@MODELS.register_module()
+class PlainAnalogV2(BasicBlock):
+    expansion = 1
+
+    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1, base_width=64,
+                 dilation=1, norm_layer=None, rate=1., neuron_cfg=None, **kwargs):
+        super(PlainAnalogV2, self).__init__()
+        if norm_layer is None:
+            norm_layer = layer.BatchNorm2d
+        if groups != 1 or base_width != 64:
+            raise ValueError('BasicBlock only supports groups=1 and base_width=64')
+        if dilation > 1:
+            raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
+        # Both self.conv1 and self.downsample layers downsample the input when stride != 1
+        mid = int(inplanes * rate)
+
+        self.sn1 = build_node(neuron_cfg)
+        self.conv1 = conv3x3(inplanes, mid, stride)
+        self.bn1 = norm_layer(mid)
+
+        self.sn2 = build_node(neuron_cfg)
+        self.conv2 = conv3x3(mid, planes)
+        self.bn2 = norm_layer(planes)
+
+        self.downsample = downsample
+        self.stride = stride
+        self.fp16_enabled = False
+
+    @auto_fp16(apply_to=('x',))
+    def forward(self, x):
+        identity = x
+
+        if self.downsample is not None:
+            identity = self.downsample(x)
+
+        out = self.sn1(x)
+        out = self.conv1(out)
+        out = self.bn1(out)
+
+        out = self.sn2(out)
+        out = self.conv2(out)
+        out = self.bn2(out)
+
+        out = identity + out
+        return out
+
+
+# channel: 64->64->64
+@MODELS.register_module()
+class BlockA222(PlainDigital):
+    def __init__(self, *args, rate=1., **kwargs):
+        super(BlockA222, self).__init__(*args, rate=rate, **kwargs)
+
+
+# channel: 128->32->128
+@MODELS.register_module()
+class BlockA414(PlainDigital):
+    def __init__(self, *args, rate=0.25, **kwargs):
+        super(BlockA414, self).__init__(*args, rate=rate, **kwargs)
+
+
+# channel: 32->128->32
+@MODELS.register_module()
+class BlockA141(PlainDigital):
+    def __init__(self, *args, rate=4., **kwargs):
+        super(BlockA141, self).__init__(*args, rate=rate, **kwargs)
+
+
+# channel: 64->64->64
+@MODELS.register_module()
+class BlockB222(PlainAnalog):
+    def __init__(self, *args, rate=1., **kwargs):
+        super(BlockB222, self).__init__(*args, rate=rate, **kwargs)
+
+
+# channel: 128->32->128
+@MODELS.register_module()
+class BlockB414(PlainAnalog):
+    def __init__(self, *args, rate=0.25, **kwargs):
+        super(BlockB414, self).__init__(*args, rate=rate, **kwargs)
+
+
+# channel: 32->128->32
+@MODELS.register_module()
+class BlockB141(PlainAnalog):
+    def __init__(self, *args, rate=4., **kwargs):
+        super(BlockB141, self).__init__(*args, rate=rate, **kwargs)
+
+
+# channel: 64->64->64
+@MODELS.register_module()
+class BlockC222(PlainAnalogV2):
+    def __init__(self, *args, rate=1., **kwargs):
+        super(BlockC222, self).__init__(*args, rate=rate, **kwargs)
+
+
+# channel: 128->32->128
+@MODELS.register_module()
+class BlockC414(PlainAnalogV2):
+    def __init__(self, *args, rate=0.25, **kwargs):
+        super(BlockC414, self).__init__(*args, rate=rate, **kwargs)
+
+
+# channel: 32->128->32
+@MODELS.register_module()
+class BlockC141(PlainAnalogV2):
+    def __init__(self, *args, rate=4., **kwargs):
+        super(BlockC141, self).__init__(*args, rate=rate, **kwargs)
