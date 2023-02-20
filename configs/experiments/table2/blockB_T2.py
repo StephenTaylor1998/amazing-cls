@@ -4,7 +4,7 @@ _base_ = [
 ]
 
 # Channel[64, 128, 256, 512] Block[2, 2, 2, 2] BottleRate=1.00 T=1
-time_step = 1
+time_step = 2
 # model settings
 model = dict(
     type='ImageClassifier',

@@ -3,16 +3,16 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 
-# Channel[64, 128, 256, 512] Block[3, 3, 3, 3] BottleRate=1.00 T=1
+# Channel[64, 128, 256, 512] Block[2, 2, 2, 2] BottleRate=1.00 T=1
 time_step = 1
 # model settings
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='SpikeResNetCifar',
-        block_type='BlockA222',
-        layers=[3, 3, 3, 3],
-        width=[64, 128, 256, 512],
+        type='SpikePreActResNetCifar',
+        block_type='BlockC222',
+        layers=[2, 2, 2, 2],
+        width=[32, 64, 128, 256],
         stride=[1, 2, 2, 2],
         num_classes=10,
         in_channels=3,
@@ -20,7 +20,6 @@ model = dict(
         groups=1, width_per_group=64,
         replace_stride_with_dilation=None,
         norm_layer=None,
-        cnf='add',
         neuron_cfg=dict(
             type='IFNode',
             detach_reset=True,

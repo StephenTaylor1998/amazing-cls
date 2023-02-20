@@ -11,9 +11,9 @@ optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
     policy='Step',
-    step=[90, 120],
+    step=[100, 150],
     gamma=0.1,
     warmup='linear',
     warmup_iters=500,
 )
-runner = dict(type='EpochBasedRunner', max_epochs=150)
+runner = dict(type='EpochBasedRunner', max_epochs=200)
