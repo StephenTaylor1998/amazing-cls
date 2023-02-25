@@ -89,6 +89,7 @@ class SpikePreActResNetCifar(nn.Module):
 
         functional.set_step_mode(self, 'm')
         functional.set_backend(self, backend='cupy', instance=NODES.get(neuron_cfg['type']))
+        # functional.set_backend(self, backend='pytorch', instance=NODES.get(neuron_cfg['type']))
 
     def _make_layer(self, block, planes, blocks, stride=1, dilate=False, neuron_cfg=None):
         norm_layer = self._norm_layer
@@ -103,10 +104,9 @@ class SpikePreActResNetCifar(nn.Module):
                 norm_layer(planes * block.expansion),
             )
 
-        layers = []
-        layers.append(block(
+        layers = [block(
             self.inplanes, planes, stride, downsample, groups=self.groups, base_width=self.base_width,
-                dilation=self.dilation, norm_layer=norm_layer, neuron_cfg=neuron_cfg))
+            dilation=self.dilation, norm_layer=norm_layer, neuron_cfg=neuron_cfg)]
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
             layers.append(block(
