@@ -618,8 +618,7 @@ class AOBasicBlock(BasicBlock):
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None, cnf: str = 'add',
-                 neuron_cfg=None):
+                 base_width=64, dilation=1, norm_layer=None, neuron_cfg=None):
         super(AOBasicBlock, self).__init__()
         if norm_layer is None:
             norm_layer = layer.BatchNorm2d
@@ -673,8 +672,7 @@ class AOBottleneck(Bottleneck):
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None, cnf: str = 'add',
-                 neuron_cfg=None):
+                 base_width=64, dilation=1, norm_layer=None, neuron_cfg=None):
         super(AOBottleneck, self).__init__()
         if norm_layer is None:
             norm_layer = layer.BatchNorm2d

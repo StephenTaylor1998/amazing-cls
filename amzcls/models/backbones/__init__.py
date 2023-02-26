@@ -1,7 +1,7 @@
 from .base import (
     SEWBasicBlock, SEWBottleneck, SpikePreActBasicBlock, SpikePreActBottleneck,
     DualFlowBasicBlockA, DualFlowBottleneckA, DualFlowBasicBlockB, DualFlowBottleneckB,
-    DualFlowBasicBlockC, DualFlowBottleneckC
+    DualFlowBasicBlockC, DualFlowBottleneckC, AOBasicBlock, AOBottleneck
 )
 from .plain_net import (
     PlainDigital, BlockA222, BlockA414, BlockA141,
