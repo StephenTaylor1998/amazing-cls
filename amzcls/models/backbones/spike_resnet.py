@@ -102,10 +102,9 @@ class SpikeResNetCifar(nn.Module):
                 norm_layer(planes * block.expansion),
             )
 
-        layers = []
-        layers.append(block(
+        layers = [block(
             self.inplanes, planes, stride, downsample, groups=self.groups, base_width=self.base_width,
-                dilation=self.dilation, norm_layer=norm_layer, cnf=cnf, neuron_cfg=neuron_cfg))
+            dilation=self.dilation, norm_layer=norm_layer, cnf=cnf, neuron_cfg=neuron_cfg)]
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
             layers.append(block(

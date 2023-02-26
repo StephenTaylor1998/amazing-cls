@@ -6,7 +6,8 @@ from .base import (
 from .plain_net import (
     PlainDigital, BlockA222, BlockA414, BlockA141,
     PlainAnalog, BlockB222, BlockB414, BlockB141,
-    PlainAnalogV2, BlockC222, BlockC414, BlockC141
+    PlainAnalogV2, BlockC222, BlockC414, BlockC141,
+    PlainDFBasicBlock
 )
 
 from .sew4dvs import (

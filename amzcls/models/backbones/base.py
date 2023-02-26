@@ -165,6 +165,8 @@ class SpikePreActBasicBlock(BasicBlock):
         self.conv2 = conv3x3(planes, planes)
 
         self.downsample = downsample
+        if downsample is not None:
+            self.downsample_sn = build_node(neuron_cfg)
         self.stride = stride
         self.use_res = True
         self.fp16_enabled = False
@@ -174,7 +176,7 @@ class SpikePreActBasicBlock(BasicBlock):
         identity = x
 
         if self.downsample is not None:
-            identity = self.downsample(x)
+            identity = self.downsample(self.downsample_sn(x))
 
         if not self.use_res:
             return identity
@@ -214,6 +216,8 @@ class SpikePreActBottleneck(Bottleneck):
         self.conv3 = conv1x1(width, planes * self.expansion)
 
         self.downsample = downsample
+        if downsample is not None:
+            self.downsample_sn = build_node(neuron_cfg)
         self.stride = stride
         self.use_res = True
         self.fp16_enabled = False
@@ -223,7 +227,7 @@ class SpikePreActBottleneck(Bottleneck):
         identity = x
 
         if self.downsample is not None:
-            identity = self.downsample(x)
+            identity = self.downsample(self.downsample_sn(x))
 
         if not self.use_res:
             return identity
@@ -267,7 +271,8 @@ class DualFlowBasicBlockA(BasicBlock):
         self.downsample_spike = deepcopy(downsample_spike)
         self.downsample_poten = deepcopy(downsample_poten)
         if downsample_spike is not None:
-            self.downsample_sn = build_node(neuron_cfg)
+            self.downsample_spike_sn = build_node(neuron_cfg)
+            self.downsample_poten_sn = build_node(neuron_cfg)
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
@@ -279,8 +284,8 @@ class DualFlowBasicBlockA(BasicBlock):
         identity_spike = spike
 
         if self.downsample_spike is not None:
-            identity_spike = self.downsample_sn(self.downsample_spike(identity_spike))
-            identity_poten = self.downsample_poten(identity_poten)
+            identity_spike = self.downsample_spike_sn(self.downsample_spike(identity_spike))
+            identity_poten = self.downsample_poten(self.downsample_poten_sn(identity_poten))
 
         if not self.use_res:
             return identity_spike, identity_poten
@@ -323,9 +328,10 @@ class DualFlowBottleneckA(Bottleneck):
         self.bn3 = norm_layer(planes * self.expansion)
         self.sn3 = build_node(neuron_cfg)
         self.downsample_spike = deepcopy(downsample_spike)
+        self.downsample_poten = deepcopy(downsample_poten)
         if downsample_spike is not None:
-            self.downsample_poten = deepcopy(downsample_poten)
-            self.downsample_sn = build_node(neuron_cfg)
+            self.downsample_spike_sn = build_node(neuron_cfg)
+            self.downsample_poten_sn = build_node(neuron_cfg)
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
@@ -337,8 +343,8 @@ class DualFlowBottleneckA(Bottleneck):
         identity_spike = spike
 
         if self.downsample_spike is not None:
-            identity_spike = self.downsample_sn(self.downsample_spike(identity_spike))
-            identity_poten = self.downsample_poten(identity_poten)
+            identity_spike = self.downsample_spike_sn(self.downsample_spike(identity_spike))
+            identity_poten = self.downsample_poten(self.downsample_poten_sn(identity_poten))
 
         if not self.use_res:
             return identity_spike, identity_poten
@@ -387,7 +393,8 @@ class DualFlowBasicBlockB(BasicBlock):
         self.downsample_spike = deepcopy(downsample_spike)
         self.downsample_poten = deepcopy(downsample_poten)
         if downsample_spike is not None:
-            self.downsample_sn = build_node(neuron_cfg)
+            self.downsample_spike_sn = build_node(neuron_cfg)
+            self.downsample_poten_sn = build_node(neuron_cfg)
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
@@ -399,8 +406,8 @@ class DualFlowBasicBlockB(BasicBlock):
         identity_spike = spike
 
         if self.downsample_spike is not None:
-            identity_spike = self.downsample_sn(self.downsample_spike(identity_spike))
-            identity_poten = self.downsample_poten(identity_poten)
+            identity_spike = self.downsample_spike_sn(self.downsample_spike(identity_spike))
+            identity_poten = self.downsample_poten(self.downsample_poten_sn(identity_poten))
 
         if not self.use_res:
             return identity_spike, identity_poten
@@ -444,7 +451,8 @@ class DualFlowBottleneckB(Bottleneck):
         self.downsample_spike = deepcopy(downsample_spike)
         self.downsample_poten = deepcopy(downsample_poten)
         if downsample_spike is not None:
-            self.downsample_sn = build_node(neuron_cfg)
+            self.downsample_spike_sn = build_node(neuron_cfg)
+            self.downsample_poten_sn = build_node(neuron_cfg)
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
@@ -456,8 +464,8 @@ class DualFlowBottleneckB(Bottleneck):
         identity_spike = spike
 
         if self.downsample_spike is not None:
-            identity_spike = self.downsample_sn(self.downsample_spike(identity_spike))
-            identity_poten = self.downsample_poten(identity_poten)
+            identity_spike = self.downsample_spike_sn(self.downsample_spike(identity_spike))
+            identity_poten = self.downsample_poten(self.downsample_poten_sn(identity_poten))
 
         if not self.use_res:
             return identity_spike, identity_poten
@@ -504,7 +512,8 @@ class DualFlowBasicBlockC(BasicBlock):
         self.downsample_spike = deepcopy(downsample_spike)
         self.downsample_poten = deepcopy(downsample_poten)
         if downsample_spike is not None:
-            self.downsample_sn = build_node(neuron_cfg)
+            self.downsample_spike_sn = build_node(neuron_cfg)
+            self.downsample_poten_sn = build_node(neuron_cfg)
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
@@ -516,8 +525,8 @@ class DualFlowBasicBlockC(BasicBlock):
         identity_spike = spike
 
         if self.downsample_spike is not None:
-            identity_spike = self.downsample_sn(self.downsample_spike(identity_spike))
-            identity_poten = self.downsample_poten(identity_poten)
+            identity_spike = self.downsample_spike_sn(self.downsample_spike(identity_spike))
+            identity_poten = self.downsample_poten(self.downsample_poten_sn(identity_poten))
 
         if not self.use_res:
             return identity_spike, identity_poten
@@ -560,7 +569,8 @@ class DualFlowBottleneckC(Bottleneck):
         self.bn3 = norm_layer(planes * self.expansion)
         self.sn3 = build_node(neuron_cfg)
         self.downsample_spike = deepcopy(downsample_spike)
-        self.downsample_poten = downsample_spike = nn.Sequential(
+        self.downsample_poten = nn.Sequential(
+            build_node(neuron_cfg),
             conv1x1(inplanes, width),
             norm_layer(width),
         )
@@ -598,6 +608,121 @@ class DualFlowBottleneckC(Bottleneck):
 
         spike = self.cnf(spike, identity_spike)
         return spike, poten
+
+    def extra_repr(self) -> str:
+        return super().extra_repr() + f'cnf={self.cnf}'
+
+
+@MODELS.register_module()
+class AOBasicBlock(BasicBlock):
+    expansion = 1
+
+    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
+                 base_width=64, dilation=1, norm_layer=None, cnf: str = 'add',
+                 neuron_cfg=None):
+        super(AOBasicBlock, self).__init__()
+        if norm_layer is None:
+            norm_layer = layer.BatchNorm2d
+        if groups != 1 or base_width != 64:
+            raise ValueError('BasicBlock only supports groups=1 and base_width=64')
+        if dilation > 1:
+            raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
+        # Both self.conv1 and self.downsample layers downsample the input when stride != 1
+        self.conv1 = conv3x3(inplanes, planes, stride)
+        self.bn1 = norm_layer(planes)
+        self.sn1 = build_node(neuron_cfg)
+        self.conv2 = conv3x3(planes, planes)
+        self.bn2 = norm_layer(planes)
+        self.sn2 = build_node(neuron_cfg)
+        self.downsample = downsample
+        if downsample is not None:
+            self.downsample_sn = build_node(neuron_cfg)
+        self.stride = stride
+        self.fun_and = sew_function('and')
+        self.fun_or = sew_function('or')
+        self.use_res = True
+        self.fp16_enabled = False
+
+    @auto_fp16(apply_to=('x',))
+    def forward(self, x):
+        identity = x
+
+        if self.downsample is not None:
+            identity = self.downsample_sn(self.downsample(x))
+
+        if not self.use_res:
+            return identity
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.sn1(out)
+        identity = self.fun_and(out, identity)
+
+        out = self.conv2(identity)
+        out = self.bn2(out)
+        out = self.sn2(out)
+        out = self.cnf(identity, out)
+        return out
+
+    def extra_repr(self) -> str:
+        return super().extra_repr() + f'cnf={self.cnf}'
+
+
+@MODELS.register_module()
+class AOBottleneck(Bottleneck):
+    expansion = 4
+
+    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
+                 base_width=64, dilation=1, norm_layer=None, cnf: str = 'add',
+                 neuron_cfg=None):
+        super(AOBottleneck, self).__init__()
+        if norm_layer is None:
+            norm_layer = layer.BatchNorm2d
+        width = int(planes * (base_width / 64.)) * groups
+        # Both self.conv2 and self.downsample layers downsample the input when stride != 1
+        self.conv1 = conv1x1(inplanes, width)
+        self.bn1 = norm_layer(width)
+        self.sn1 = build_node(neuron_cfg)
+        self.conv2 = conv3x3(width, width, stride, groups, dilation)
+        self.bn2 = norm_layer(width)
+        self.sn2 = build_node(neuron_cfg)
+        self.conv3 = conv1x1(width, planes * self.expansion)
+        self.bn3 = norm_layer(planes * self.expansion)
+        self.sn3 = build_node(neuron_cfg)
+        self.downsample = downsample
+        if downsample is not None:
+            self.downsample_sn = build_node(neuron_cfg)
+        self.stride = stride
+        self.fun_and = sew_function('and')
+        self.fun_or = sew_function('or')
+        self.use_res = True
+        self.fp16_enabled = False
+
+    @auto_fp16(apply_to=('x',))
+    def forward(self, x):
+        identity = x
+
+        if self.downsample is not None:
+            identity = self.downsample_sn(self.downsample(x))
+
+        if not self.use_res:
+            return identity
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.sn1(out)
+        identity = self.fun_or(out, identity)
+
+        out = self.conv2(identity)
+        out = self.bn2(out)
+        out = self.sn2(out)
+        identity = self.fun_and(out, identity)
+
+        out = self.conv3(identity)
+        out = self.bn3(out)
+        out = self.sn3(out)
+        out = self.fun_or(out, identity)
+        return out
 
     def extra_repr(self) -> str:
         return super().extra_repr() + f'cnf={self.cnf}'
