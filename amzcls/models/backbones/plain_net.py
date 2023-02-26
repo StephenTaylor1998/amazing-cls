@@ -1,8 +1,8 @@
 from mmcv.runner import auto_fp16
 from spikingjelly.activation_based import layer
-from spikingjelly.activation_based.model.spiking_resnet import conv3x3
+from spikingjelly.activation_based.model.spiking_resnet import conv3x3, conv1x1
 
-from .base import BasicBlock
+from .base import BasicBlock, Bottleneck
 from ..builder import MODELS
 from ..neurons import build_node
 
@@ -259,4 +259,61 @@ class PlainDFBasicBlock(BasicBlock):
         out = self.bn2(out)
 
         out = identity + out
+        return out
+
+
+@MODELS.register_module()
+class PlainDFBottleneck(Bottleneck):
+    expansion = 4
+
+    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
+                 base_width=64, dilation=1, norm_layer=None, neuron_cfg=None):
+        super(PlainDFBottleneck, self).__init__()
+        if norm_layer is None:
+            norm_layer = layer.BatchNorm2d
+        width = int(planes * (base_width / 64.)) * groups
+        # Both self.conv2 and self.downsample layers downsample the input when stride != 1
+        self.bn1 = norm_layer(inplanes)
+        self.sn1 = build_node(neuron_cfg)
+        self.conv1 = conv1x1(inplanes, width)
+
+        self.bn2 = norm_layer(width)
+        self.sn2 = build_node(neuron_cfg)
+        self.conv2 = conv3x3(width, width, stride, groups, dilation)
+
+        self.bn3 = norm_layer(width)
+        self.sn3 = build_node(neuron_cfg)
+        self.conv3 = conv1x1(width, planes * self.expansion)
+
+        self.downsample = downsample
+        if downsample is not None:
+            self.downsample_sn = build_node(neuron_cfg)
+        self.stride = stride
+        self.use_res = True
+        self.fp16_enabled = False
+
+    @auto_fp16(apply_to=('x',))
+    def forward(self, x):
+        identity = x
+
+        if self.downsample is not None:
+            identity = self.downsample(self.downsample_sn(x))
+
+        if not self.use_res:
+            return identity
+
+        out = self.sn1(x)
+        out = self.conv1(out)
+        out = self.bn1(out)
+
+        out = self.sn2(out)
+        out = self.conv2(out)
+
+        out = self.bn2(out)
+
+        out = self.sn3(out)
+        out = self.conv3(out)
+        out = self.bn3(out)
+
+        out += identity
         return out
