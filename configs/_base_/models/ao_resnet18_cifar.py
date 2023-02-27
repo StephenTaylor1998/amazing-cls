@@ -2,24 +2,23 @@
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='PlainNet',
-        in_channel=3,
-        channels=[32, 32, 32, 32],
-        block_in_layers=[2, 2, 2, 2],
-        down_samples=[1, 2, 2, 2],
+        type='SpikeResNetCifar',
+        block_type='AOBasicBlock',
+        layers=[2, 2, 2, 2],
+        width=[64, 128, 256, 512],
+        stride=[1, 2, 2, 2],
         num_classes=10,
-        # block_type='digital',
-        block_type='analog',
-        rate=1.,
-        use_res=True,
+        in_channels=3,
+        zero_init_residual=True,
+        groups=1, width_per_group=64,
+        replace_stride_with_dilation=None,
+        norm_layer=None,
         neuron_cfg=dict(
             type='IFNode',
-            v_reset=None,
-            detach_reset=False,
             surrogate_function=dict(
                 type='ATan'
             )
-        )
+        ),
     ),
     head=dict(
         type='ClsHead',

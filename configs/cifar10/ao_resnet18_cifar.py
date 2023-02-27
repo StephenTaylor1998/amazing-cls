@@ -1,45 +1,12 @@
 _base_ = [
-    '../_base_/default_runtime.py',
-    '../_base_/models/plain_net.py',
-    '../_base_/schedules/cifar10_bs128.py'
+    '../_base_/models/ao_resnet18_cifar.py',
+    '../_base_/schedules/cifar10_bs128.py',
+    '../_base_/default_runtime.py'
 ]
 
-# [2, 2, 2, 2]
-# SGD-200 T1=82.0200%
-# SGD-200 T2=85.0700%
-# SGD-200 T3=87.0200%
-# SGD-200 T4=88.0400%
-# [4, 4, 4, 4]
-# SGD-200 T1=88.2400%
-# [6, 6, 6, 6]
-# SGD-200 T1=89.1500%
-rate = 0.5
-ch = int(rate * 64)
-model = dict(
-    backbone=dict(
-        type='PlainNet',
-        in_channel=3,
-        channels=[ch, ch, ch, ch],
-        block_in_layers=[2, 2, 2, 2],
-        down_samples=[1, 2, 2, 2],
-        num_classes=10,
-        block_type='digital',
-        rate=0.25,
-        use_res=True,
-        neuron_cfg=dict(
-            type='IFNode',
-            v_reset=None,
-            detach_reset=False,
-            surrogate_function=dict(
-                type='ATan'
-            )
-        )
-    ),
-)
-
+time_step = 1
 # dataset settings
 dataset_type = 'CIFAR10'
-time_step = 1
 img_norm_cfg = dict(
     mean=[125.307, 122.961, 113.8575],
     std=[51.5865, 50.847, 51.255],
@@ -75,5 +42,4 @@ data = dict(
         type=dataset_type,
         data_prefix='data/cifar10',
         pipeline=test_pipeline,
-        test_mode=True)
-)
+        test_mode=True))
