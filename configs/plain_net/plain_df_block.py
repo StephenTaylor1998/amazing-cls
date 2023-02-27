@@ -1,43 +1,42 @@
 _base_ = [
-    '../_base_/default_runtime.py',
-    '../_base_/models/plain_net.py',
-    '../_base_/schedules/cifar10_bs128.py'
+    '../_base_/schedules/cifar10_bs128.py',
+    '../_base_/default_runtime.py'
 ]
 
-# [2, 2, 2, 2]
-# SGD-200 T1=83.0500%
-# SGD-200 T2=85.2800%
-# SGD-200 T3=86.8500%
-# SGD-200 T4=88.0600%
-# [4, 4, 4, 4]
-
-rate = 1.0
-ch = int(rate * 32)
+# Channel[64, 128, 256, 512] Block[2, 2, 2, 2] BottleRate=1.00 T=1
+time_step = 1
+# model settings
 model = dict(
+    type='ImageClassifier',
     backbone=dict(
-        type='PlainNet',
-        in_channel=3,
-        channels=[ch, ch, ch, ch],
-        block_in_layers=[6, 6, 6, 6],
-        down_samples=[1, 2, 2, 2],
+        type='SpikePreActResNetCifar',
+        block_type='PlainDFBasicBlock',
+        layers=[2, 2, 2, 2],
+        width=[64, 128, 256, 512],
+        stride=[1, 2, 2, 2],
         num_classes=10,
-        block_type='analog',
-        rate=1.,
-        use_res=True,
+        in_channels=3,
+        zero_init_residual=True,
+        groups=1, width_per_group=64,
+        replace_stride_with_dilation=None,
+        norm_layer=None,
         neuron_cfg=dict(
             type='IFNode',
-            v_reset=None,
-            detach_reset=False,
+            detach_reset=True,
             surrogate_function=dict(
                 type='ATan'
             )
-        )
+        ),
     ),
+    head=dict(
+        type='ClsHead',
+        cal_acc=True,
+        loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
+    )
 )
 
 # dataset settings
 dataset_type = 'CIFAR10'
-time_step = 1
 img_norm_cfg = dict(
     mean=[125.307, 122.961, 113.8575],
     std=[51.5865, 50.847, 51.255],
@@ -73,5 +72,4 @@ data = dict(
         type=dataset_type,
         data_prefix='data/cifar10',
         pipeline=test_pipeline,
-        test_mode=True)
-)
+        test_mode=True))
