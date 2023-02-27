@@ -618,7 +618,7 @@ class AOBasicBlock(BasicBlock):
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None, neuron_cfg=None):
+                 base_width=64, dilation=1, norm_layer=None, neuron_cfg=None, **kwargs):
         super(AOBasicBlock, self).__init__()
         if norm_layer is None:
             norm_layer = layer.BatchNorm2d
@@ -660,7 +660,7 @@ class AOBasicBlock(BasicBlock):
         out = self.conv2(identity)
         out = self.bn2(out)
         out = self.sn2(out)
-        out = self.cnf(identity, out)
+        out = self.fun_or(identity, out)
         return out
 
     def extra_repr(self) -> str:
@@ -672,7 +672,7 @@ class AOBottleneck(Bottleneck):
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None, neuron_cfg=None):
+                 base_width=64, dilation=1, norm_layer=None, neuron_cfg=None, **kwargs):
         super(AOBottleneck, self).__init__()
         if norm_layer is None:
             norm_layer = layer.BatchNorm2d
