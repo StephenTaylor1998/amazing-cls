@@ -2,8 +2,8 @@
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='SpikeResNetCifar',
-        block_type='AOBasicBlock',
+        type='AOResNetCifar',
+        block_type='SEWBasicBlock',
         layers=[2, 2, 2, 2],
         width=[64, 128, 256, 512],
         stride=[1, 2, 2, 2],
@@ -13,6 +13,7 @@ model = dict(
         groups=1, width_per_group=64,
         replace_stride_with_dilation=None,
         norm_layer=None,
+        cnf_list=['or', 'iand'],
         neuron_cfg=dict(
             type='IFNode',
             surrogate_function=dict(
