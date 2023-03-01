@@ -1,3 +1,4 @@
+import torch
 from mmcv.runner import auto_fp16
 from spikingjelly.activation_based import layer
 from spikingjelly.activation_based.model.spiking_resnet import conv3x3, conv1x1
@@ -231,7 +232,7 @@ class PlainDFBasicBlock(BasicBlock):
         self.bn1 = norm_layer(mid)
 
         self.sn2 = build_node(neuron_cfg)
-        self.conv2 = conv3x3(mid, planes)
+        self.conv2 = conv3x3(mid * 2, planes, groups=2)
         self.bn2 = norm_layer(planes)
 
         self.downsample = downsample
@@ -254,7 +255,8 @@ class PlainDFBasicBlock(BasicBlock):
         out = self.bn1(out)
 
         out = self.sn2(out)
-        out = out + spike_id
+        # [T, B, C, H, W] or [B, C, H, W]
+        out = torch.cat((out, spike_id), dim=-3)
         out = self.conv2(out)
         out = self.bn2(out)
 
