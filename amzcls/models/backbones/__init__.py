@@ -9,12 +9,16 @@ from .plain_net import (
     PlainAnalogV2, BlockC222, BlockC414, BlockC141,
     PlainDFBasicBlock
 )
-
 from .sew4dvs import (
     ResNetN4DVS,
     sew4dvs_gesture, org4dvs_gesture, spk4dvs_gesture, spa4dvs_gesture,
     sew4dvs_cifar10, org4dvs_cifar10, spk4dvs_cifar10, spa4dvs_cifar10,
     sew4tsd, org4tsd, spk4tsd, spa4tsd
+)
+from .spike_ao_resnet import (
+    AOResNetCifar, ao_resnet18_cifar, ao_resnet34_cifar, ao_resnet50_cifar,
+    ao_resnet101_cifar, ao_resnet152_cifar, ao_resnext50_cifar_32x4d,
+    ao_resnext101_cifar_32x8d, ao_wide_resnet50_cifar_2, ao_wide_resnet101_cifar_2
 )
 from .spike_df_resnet import (
     DFResNetCifar,
@@ -31,8 +35,8 @@ from .spike_preact_resnet import (
     spike_preact_resnext50_cifar_32x4d, spike_preact_resnext101_cifar_32x8d,
     spike_preact_wide_resnet50_cifar_2, spike_preact_wide_resnet101_cifar_2)
 from .spike_resnet import (
-    SpikeResNetCifar, spike_resnet18_cifar, spike_resnet34_cifar, spike_resnet50_cifar,
-    spike_resnet101_cifar, spike_resnet152_cifar, spike_resnext50_cifar_32x4d,
+    SpikeResNetCifar, spike_resnet_cifar, spike_resnet18_cifar, spike_resnet34_cifar,
+    spike_resnet50_cifar, spike_resnet101_cifar, spike_resnet152_cifar, spike_resnext50_cifar_32x4d,
     spike_resnext101_cifar_32x8d, spike_wide_resnet50_cifar_2, spike_wide_resnet101_cifar_2)
 
 __all__ = [
@@ -49,8 +53,8 @@ __all__ = [
     'sew4dvs_cifar10', 'org4dvs_cifar10', 'spk4dvs_cifar10', 'spa4dvs_cifar10',
     'sew4tsd', 'org4tsd', 'spk4tsd', 'spa4tsd',
 
-    'SpikeResNetCifar', 'spike_resnet18_cifar', 'spike_resnet34_cifar', 'spike_resnet50_cifar',
-    'spike_resnet101_cifar', 'spike_resnet152_cifar', 'spike_resnext50_cifar_32x4d',
+    'SpikeResNetCifar', 'spike_resnet_cifar', 'spike_resnet18_cifar', 'spike_resnet34_cifar',
+    'spike_resnet50_cifar', 'spike_resnet101_cifar', 'spike_resnet152_cifar', 'spike_resnext50_cifar_32x4d',
     'spike_resnext101_cifar_32x8d', 'spike_wide_resnet50_cifar_2', 'spike_wide_resnet101_cifar_2',
 
     'SpikePreActResNetCifar', 'spike_preact_resnet18_cifar', 'spike_preact_resnet34_cifar',
