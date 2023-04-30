@@ -8,6 +8,7 @@ train_pipeline = [
     dict(type='TimeSample', keys=['img'], time_step=16, sample_step=12),
     dict(type='ToFloatTensor', keys=['img']),
     dict(type='ToTensor', keys=['gt_label']),
+    dict(type='SNNAugment', keys=['img']),
     dict(type='Collect', keys=['img', 'gt_label'])
 ]
 test_pipeline = [
