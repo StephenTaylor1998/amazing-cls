@@ -15,20 +15,20 @@ augmentation_space = {
     "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
     "Cutout": (torch.linspace(0.0, 30.0, num_bins), True),
 }
-augmentation_space = {
-    # op_name: (magnitudes, signed)
-    "Identity": (torch.tensor(0.0), False),
-    "ShearX": (torch.linspace(0.0, 0.3, num_bins), True),
-    "ShearY": (torch.linspace(0.0, 0.3, num_bins), True),
-    "TranslateX": (torch.linspace(0.0, 5.0, num_bins), True),
-    "TranslateY": (torch.linspace(0.0, 5.0, num_bins), True),
-    "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
-    "Cutout": (torch.linspace(0.0, 30.0, num_bins), True),
-    "Brightness": (torch.linspace(0.0, 0.3, num_bins), True),
-    "Color": (torch.linspace(0.0, 0.3, num_bins), True),
-    "Contrast": (torch.linspace(0.0, 0.3, num_bins), True),
-    "Sharpness": (torch.linspace(0.0, 0.3, num_bins), True),
-}
+# augmentation_space = {
+#     # op_name: (magnitudes, signed)
+#     "Identity": (torch.tensor(0.0), False),
+#     "ShearX": (torch.linspace(0.0, 0.3, num_bins), True),
+#     "ShearY": (torch.linspace(0.0, 0.3, num_bins), True),
+#     "TranslateX": (torch.linspace(0.0, 20.0, num_bins), True),
+#     "TranslateY": (torch.linspace(0.0, 20.0, num_bins), True),
+#     "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
+#     "Cutout": (torch.linspace(0.0, 30.0, num_bins), True),
+#     "Brightness": (torch.linspace(0.0, 0.3, num_bins), True),
+#     "Color": (torch.linspace(0.0, 0.3, num_bins), True),
+#     "Contrast": (torch.linspace(0.0, 0.3, num_bins), True),
+#     "Sharpness": (torch.linspace(0.0, 0.3, num_bins), True),
+# }
 train_pipeline = [
     dict(type='TimeSample', keys=['img'], time_step=16, sample_step=12, use_rand=False),
     dict(type='ToFloatTensor', keys=['img']),
