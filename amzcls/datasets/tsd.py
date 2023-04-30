@@ -72,7 +72,7 @@ def generate_dataset(time, h, w):
 
 def generate_indices(time, sample_time):
     global indices
-    assert time>=sample_time, f"[INFO] [AMZCLS] `TIME({time}) >= SAMPLE_TIME({sample_time})`."
+    assert time >= sample_time, f"[INFO] [AMZCLS] `TIME({time}) >= SAMPLE_TIME({sample_time})`."
     if indices is None:
         indices = list(combinations(range(time), sample_time))
     return indices
