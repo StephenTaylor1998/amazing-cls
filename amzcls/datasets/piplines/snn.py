@@ -5,6 +5,7 @@ import torch
 from torch import Tensor
 from torchvision.transforms import functional as F, InterpolationMode
 from torchvision.transforms.transforms import RandomErasing
+
 from ..builder import PIPELINES
 
 
@@ -25,23 +26,27 @@ class SNNAugmentWide(torch.nn.Module):
         """
 
     def __init__(self, num_magnitude_bins: int = 31, interpolation: InterpolationMode = InterpolationMode.NEAREST,
-                 fill: Optional[List[float]] = None) -> None:
+                 fill: Optional[List[float]] = None, augmentation_space: dict = None) -> None:
         super().__init__()
         self.num_magnitude_bins = num_magnitude_bins
         self.interpolation = interpolation
         self.fill = fill
         self.cutout = RandomErasing(p=1, scale=(0.001, 0.11), ratio=(1, 1))
+        self.augmentation_space = augmentation_space
 
     def _augmentation_space(self, num_bins: int) -> Dict[str, Tuple[Tensor, bool]]:
-        return {
-            # op_name: (magnitudes, signed)
-            "Identity": (torch.tensor(0.0), False),
-            "ShearX": (torch.linspace(-0.3, 0.3, num_bins), True),
-            "TranslateX": (torch.linspace(-5.0, 5.0, num_bins), True),
-            "TranslateY": (torch.linspace(-5.0, 5.0, num_bins), True),
-            "Rotate": (torch.linspace(-30.0, 30.0, num_bins), True),
-            "Cutout": (torch.linspace(1.0, 30.0, num_bins), True)
-        }
+        if self.augmentation_space is None:
+            return {
+                # op_name: (magnitudes, signed)
+                "Identity": (torch.tensor(0.0), False),
+                "ShearX": (torch.linspace(-0.3, 0.3, num_bins), True),
+                "TranslateX": (torch.linspace(-5.0, 5.0, num_bins), True),
+                "TranslateY": (torch.linspace(-5.0, 5.0, num_bins), True),
+                "Rotate": (torch.linspace(-30.0, 30.0, num_bins), True),
+                "Cutout": (torch.linspace(1.0, 30.0, num_bins), True)
+            }
+        else:
+            return self.augmentation_space
 
     def forward(self, img: Tensor) -> Tensor:
         """
@@ -96,23 +101,42 @@ def _apply_op(img: Tensor, op_name: str, magnitude: float,
     elif op_name == "Rotate":
         img = F.rotate(img, magnitude, interpolation=interpolation, fill=fill)
     elif op_name == "Brightness":
-        img = F.adjust_brightness(img, 1.0 + magnitude)
+        # img = F.adjust_brightness(img, 1.0 + magnitude)
+        img[:, 0:1] = F.adjust_brightness(img[:, 0:1], 1.0 + magnitude)
+        img[:, 1:2] = F.adjust_brightness(img[:, 1:2], 1.0 + magnitude)
     elif op_name == "Color":
-        img = F.adjust_saturation(img, 1.0 + magnitude)
+        # img = F.adjust_saturation(img, 1.0 + magnitude)
+        img[:, 0:1] = F.adjust_saturation(img[:, 0:1], 1.0 + magnitude)
+        img[:, 1:2] = F.adjust_saturation(img[:, 1:2], 1.0 + magnitude)
     elif op_name == "Contrast":
-        img = F.adjust_contrast(img, 1.0 + magnitude)
+        # img = F.adjust_contrast(img, 1.0 + magnitude)
+        img[:, 0:1] = F.adjust_contrast(img[:, 0:1], 1.0 + magnitude)
+        img[:, 1:2] = F.adjust_contrast(img[:, 1:2], 1.0 + magnitude)
     elif op_name == "Sharpness":
-        img = F.adjust_sharpness(img, 1.0 + magnitude)
+        # img = F.adjust_sharpness(img, 1.0 + magnitude)
+        img[:, 0:1] = F.adjust_sharpness(img[:, 0:1], 1.0 + magnitude)
+        img[:, 1:2] = F.adjust_sharpness(img[:, 1:2], 1.0 + magnitude)
     elif op_name == "Posterize":
-        img = F.posterize(img, int(magnitude))
+        # img = F.posterize(img, int(magnitude))
+        img[:, 0:1] = F.posterize(img[:, 0:1], int(magnitude))
+        img[:, 1:2] = F.posterize(img[:, 1:2], int(magnitude))
     elif op_name == "Solarize":
-        img = F.solarize(img, magnitude)
+        # img = F.solarize(img, magnitude)
+        img[:, 0:1] = F.solarize(img[:, 0:1], magnitude)
+        img[:, 1:2] = F.solarize(img[:, 1:2], magnitude)
     elif op_name == "AutoContrast":
-        img = F.autocontrast(img)
+        # img = F.autocontrast(img)
+        img[:, 0:1] = F.autocontrast(img[:, 0:1])
+        img[:, 1:2] = F.autocontrast(img[:, 1:2])
     elif op_name == "Equalize":
-        img = F.equalize(img)
+        # img = F.equalize(img)
+        img[:, 0:1] = F.equalize(img[:, 0:1])
+        img[:, 1:2] = F.equalize(img[:, 1:2])
     elif op_name == "Invert":
-        img = F.invert(img)
+        # img = F.invert(img)
+        img[:, 0:1] = F.invert(img[:, 0:1])
+        img[:, 1:2] = F.invert(img[:, 1:2])
+
 
     elif op_name == "Identity":
         pass
@@ -123,10 +147,33 @@ def _apply_op(img: Tensor, op_name: str, magnitude: float,
 
 @PIPELINES.register_module()
 class SNNAugment(object):
+    """
 
-    def __init__(self, keys, num_magnitude_bins: int = 31):
+    augmentation_space = {
+        # op_name: (magnitudes, signed)
+        "Identity": (torch.tensor(0.0), False),
+        "ShearX": (torch.linspace(0.0, 0.3, num_bins), True),
+        "ShearY": (torch.linspace(0.0, 0.3, num_bins), True),
+        "TranslateX": (torch.linspace(0.0, 5.0, num_bins), True),
+        "TranslateY": (torch.linspace(0.0, 5.0, num_bins), True),
+        "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
+        "Cutout": (torch.linspace(0.0, 30.0, num_bins), True),
+        "Brightness": (torch.linspace(0.0, 0.9, num_bins), True),
+        "Color": (torch.linspace(0.0, 0.9, num_bins), True),
+        "Contrast": (torch.linspace(0.0, 0.9, num_bins), True),
+        "Sharpness": (torch.linspace(0.0, 0.9, num_bins), True),
+        "Posterize": (8 - (torch.arange(num_bins) / ((num_bins - 1) / 4)).round().int(), False),
+        "Solarize": (torch.linspace(256.0, 0.0, num_bins), False),
+        "AutoContrast": (torch.tensor(0.0), False),
+        "Equalize": (torch.tensor(0.0), False),
+        "Invert": (torch.tensor(0.0), False),
+    }
+    """
+
+    def __init__(self, keys, num_magnitude_bins: int = 31, augmentation_space: dict = None):
         self.keys = keys
-        self.snn_augment = SNNAugmentWide(num_magnitude_bins)
+        self.snn_augment = SNNAugmentWide(
+            num_magnitude_bins, augmentation_space=augmentation_space)
 
     def __call__(self, results):
         for k in self.keys:
