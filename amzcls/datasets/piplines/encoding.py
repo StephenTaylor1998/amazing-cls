@@ -74,16 +74,18 @@ class TimeSample(object):
         self.use_rand = use_rand
 
     def __call__(self, results):
-        if self.use_rand:
-            sample_step = random.randint(self.sample_step, self.time_step)
-        else:
-            sample_step = self.sample_step
+        sample_step = random.randint(self.sample_step, self.time_step) if self.use_rand else self.sample_step
         indices = random.sample(
             range(self.time_step), sample_step
         )
         indices.sort()
         for k in self.keys:
             results[k] = results[k][indices]
+
+            if self.use_rand:
+                zero = np.zeros((self.time_step - sample_step, *results[k].shape[1:]), dtype=results[k].dtype)
+                results[k] = np.concatenate((results[k], zero), axis=0)
+
         return results
 
     def __repr__(self):
