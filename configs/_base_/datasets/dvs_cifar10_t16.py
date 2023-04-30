@@ -5,7 +5,7 @@ time_step = 16
 train_pipeline = [
     # dict(type='RandomCrop', size=32, padding=4),
     # dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
-    dict(type='TimeSample', keys=['img'], time_step=16, sample_step=12),
+    dict(type='TimeSample', keys=['img'], time_step=16, sample_step=12, use_rand=True),
     dict(type='ToFloatTensor', keys=['img']),
     dict(type='ToTensor', keys=['gt_label']),
     dict(type='SNNAugment', keys=['img']),

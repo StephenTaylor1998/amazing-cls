@@ -67,14 +67,19 @@ class ToFloatTensor(object):
 @PIPELINES.register_module()
 class TimeSample(object):
 
-    def __init__(self, keys, time_step: int, sample_step: int):
+    def __init__(self, keys, time_step: int, sample_step: int, use_rand=True):
         self.keys = keys
         self.time_step = time_step
         self.sample_step = sample_step
+        self.use_rand = use_rand
 
     def __call__(self, results):
+        if self.use_rand:
+            sample_step = random.randint(self.sample_step, self.time_step)
+        else:
+            sample_step = self.sample_step
         indices = random.sample(
-            range(self.time_step), self.sample_step
+            range(self.time_step), sample_step
         )
         indices.sort()
         for k in self.keys:
