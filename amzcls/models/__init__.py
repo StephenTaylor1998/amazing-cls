@@ -3,6 +3,7 @@ from mmpretrain.models import *
 from mmpretrain.models.builder import (
     BACKBONES, CLASSIFIERS, HEADS, LOSSES, NECKS, build_backbone, build_classifier, build_head, build_loss, build_neck
 )
+from .mmpretrain_models import *
 
 
 __all__ = [
