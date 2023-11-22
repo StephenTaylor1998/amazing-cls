@@ -9,7 +9,6 @@ try:
     import mmpretrain
 except:
     print("mmpretrain is not exist.")
-    exit(1)
 
 mmcv_minimum_version = '2.0.0'
 mmcv_maximum_version = '2.1.0'

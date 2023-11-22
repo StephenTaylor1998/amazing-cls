@@ -2,12 +2,12 @@
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='TAResNetCifar',
+        type='SEWResNet',
         block_type='SEWBasicBlock',
-        layers=[2, 2, 2, 2],
+        layers=[3, 4, 6, 3],
         width=[64, 128, 256, 512],
         stride=[1, 2, 2, 2],
-        num_classes=10,
+        num_classes=1000,
         in_channels=3,
         zero_init_residual=True,
         groups=1, width_per_group=64,
@@ -17,7 +17,7 @@ model = dict(
         neuron_cfg=dict(
             type='IFNode',
             surrogate_function=dict(
-                type='Sigmoid'
+                type='ATan'
             )
         ),
     ),
