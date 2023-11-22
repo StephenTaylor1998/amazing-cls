@@ -12,6 +12,7 @@ from .builder import DATASETS
 from .mmpretrain_datasets import BaseDataset
 
 __all__ = ['DVSCifar10']
+GLOBAL_DVS_DATASET = None
 
 
 @DATASETS.register_module()
@@ -51,36 +52,35 @@ class DVSCifar10(BaseDataset):
         return len(self.data_infos)
 
 
-dvs_dataset = None
 train_indices = None
 test_indices = None
 
 
 def load_dvs_cifar10(data_prefix, test_mode, time_step, data_type='frame', split_by='number'):
-    global dvs_dataset
-    if dvs_dataset is None:
-        dvs_dataset = CIFAR10DVS(
+    global GLOBAL_DVS_DATASET
+    if GLOBAL_DVS_DATASET is None:
+        GLOBAL_DVS_DATASET = CIFAR10DVS(
             root=data_prefix,
             data_type=data_type,
             frames_number=time_step,
             split_by=split_by)
         print(f'[INFO] [AMZCLS] Processing {"testing" if test_mode else "training"} dataset...')
-    return dvs_dataset
+    return GLOBAL_DVS_DATASET
 
 
 def dvs_cifar10_indices(train_ratio: float, test_mode):
     # todo: random-split
     global test_indices
     global train_indices
-    if train_indices is None and test_indices is None:
+    if (train_indices is None) and (test_indices is None):
         indices = [[i for i in range(j * 1000, (j + 1) * 1000)] for j in range(10)]
         for index in indices:
+            np.random.seed(index)
             np.random.shuffle(index)
         test_indices = [indices[j][int(1000 * train_ratio):] for j in range(10)]
         train_indices = [indices[j][:int(1000 * train_ratio)] for j in range(10)]
 
     return test_indices if test_mode else train_indices
-
 
 
 def load_npz(file_name, data_type='frames'):
@@ -99,6 +99,7 @@ def load_data_infos(dvs_dataset, dataset_indices, unpack=True):
                 'gt_label': np.array(sample[1], dtype=np.int64)
             })
         sort_by_class.append(class_infos)
+    # TODO: check del here.
     del dvs_dataset
 
     if unpack:
@@ -117,8 +118,9 @@ def load_data_infos_with_ckpt(dvs_dataset, dataset_indices, ckpt):
         sort_by_class = load_data_infos(dvs_dataset, dataset_indices, unpack=False)
         _save_ckpt(sort_by_class, ckpt)
 
+    # TODO: check del here.
     del dvs_dataset
-    data_infos = []
+    data_infos = []  # unpack here
     for data in sort_by_class:
         data_infos.extend(data)
     return data_infos
