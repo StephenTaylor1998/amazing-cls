@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/models/spikformer_dvs.py',
+    '../_base_/models/spikformer_cifar.py',
     '../_base_/datasets/cifar10_bs256_rsb_a12.py',
     '../_base_/schedules/imagenet_bs2048_rsb.py',
     '../_base_/default_runtime.py'
@@ -8,13 +8,19 @@ _base_ = [
 # model settings
 model = dict(
     backbone=dict(
-        type='Spikformer',
+        type='SpikformerCifar',
         num_classes=10,
         in_channels=3,
         time_step=4,
     ),
     head=dict(
-        loss=dict(use_sigmoid=True),
+        # loss=dict(use_sigmoid=True),
+        loss=dict(
+            type='LabelSmoothLoss',
+            label_smooth_val=0.1,
+            num_classes=10,
+            reduction='mean',
+            loss_weight=1.0),
         cal_acc=False,
     ),
     train_cfg=dict(augments=[

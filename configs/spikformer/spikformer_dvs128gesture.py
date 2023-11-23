@@ -8,7 +8,7 @@ _base_ = [
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='Spikformer',
+        type='SpikformerDVS',
         num_classes=11,
         in_channels=2,
     ),
