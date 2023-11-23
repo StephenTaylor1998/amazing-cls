@@ -2,7 +2,7 @@
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='Spikformer',
+        type='SpikformerDVS',
         num_classes=10,
         in_channels=2,
     ),

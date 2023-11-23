@@ -10,7 +10,7 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         neuron_cfg=dict(
-            type='StateLIFNode',
+            type='LazyStateLIFNode',
         ),
         time_step=None,
         in_channels=2,
