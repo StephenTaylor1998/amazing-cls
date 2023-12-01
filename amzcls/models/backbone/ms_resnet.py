@@ -155,10 +155,8 @@ default_stride = [1, 2, 2, 2]
 class MSResNetCifar(nn.Module):
     def __init__(self, block_type, layers: list, width: list = None, stride: list = None, num_classes=10,
                  in_channels=3, zero_init_residual=False, groups=1, width_per_group=64,
-                 replace_stride_with_dilation=None, norm_layer=None, cnf_list: tuple = ('add',), neuron_cfg=None,
-                 time_step=4):
+                 replace_stride_with_dilation=None, norm_layer=None, cnf_list: tuple = ('add',), neuron_cfg=None):
         super().__init__()
-        self.time_step = time_step
         block = MODELS.get(block_type)
         if norm_layer is None:
             norm_layer = layer.BatchNorm2d
@@ -249,10 +247,6 @@ class MSResNetCifar(nn.Module):
 
     def _forward_impl(self, x):
         functional.reset_net(self)
-        if self.time_step is not None:
-            x = x.unsqueeze(0).repeat(self.time_step, 1, 1, 1, 1)
-        else:
-            x = torch.permute(x, (1, 0, 2, 3, 4))
 
         x = self.conv1(x)
         x = self.bn1(x)
@@ -269,7 +263,7 @@ class MSResNetCifar(nn.Module):
             x = torch.flatten(x, 2)
 
         x = self.sn1(x)
-        x = self.fc(x.mean(0))
+        x = self.fc(x)
         # 0~3 91.89
         # 1~3 91.89
         # 2~3 91.97
