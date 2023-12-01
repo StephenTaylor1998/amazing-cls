@@ -15,7 +15,7 @@ model = dict(
         ),
     ),
     head=dict(
-        type='ClsHead',
+        type='SpikeClsHead',
         cal_acc=True,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
     ),
