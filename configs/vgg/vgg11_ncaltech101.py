@@ -11,7 +11,6 @@ model = dict(
         neuron_cfg=dict(
             type='LIFNode',
         ),
-        time_step=None,
         num_classes=101,
         in_channels=2,
     ),

@@ -12,10 +12,11 @@ model = dict(
         neuron_cfg=dict(
             type='LIFNode',
         ),
-        time_step=None,
         in_channels=2,
     ),
     head=dict(
+        trainable=True,  # #############
+        time_step=16,  # ################
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,
