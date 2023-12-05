@@ -7,7 +7,7 @@ from mmpretrain.models.classifiers import ImageClassifier as MMPImageClassifier
 from mmpretrain.models.classifiers import TimmClassifier as MMPTimmClassifier
 from torch import nn
 
-from .builder import MODELS
+from ..builder import MODELS
 
 
 @MODELS.register_module()

@@ -7,7 +7,7 @@ model = dict(
         in_channels=2,
     ),
     head=dict(
-        type='ClsHead',
+        type='SpikeClsHead',
         cal_acc=True,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
     ),

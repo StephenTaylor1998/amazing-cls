@@ -1,6 +1,12 @@
 from .dvs import SpikFormerDVS, NDADVSCifar10, NDANCaltech101
-from .snn_transforms import ToFloatTensor, RandomHorizontalFlipDVS, ResizeDVS
+from .snn_transforms import (
+    ToFloatTensor, RandomHorizontalFlipDVS, ResizeDVS, TimeSample, RandomSliding, RandomCircularSliding,
+    RandomTimeShuffle, RandomTimeShuffleLegacy
+)
 
 __all__ = [
-    'ToFloatTensor', 'RandomHorizontalFlipDVS', 'ResizeDVS',
-    'SpikFormerDVS', 'NDADVSCifar10', 'NDANCaltech101']
+    'SpikFormerDVS', 'NDADVSCifar10', 'NDANCaltech101',
+
+    'ToFloatTensor', 'RandomHorizontalFlipDVS', 'ResizeDVS', 'TimeSample', 'RandomSliding', 'RandomCircularSliding',
+    'RandomTimeShuffle', 'RandomTimeShuffleLegacy',
+]

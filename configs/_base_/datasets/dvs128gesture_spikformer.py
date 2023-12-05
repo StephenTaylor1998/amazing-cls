@@ -15,6 +15,8 @@ augmentation_space = {
 }
 
 data_preprocessor = dict(
+    type='DVSPreprocessor',
+    time_step=time_step,
     num_classes=11,
     to_rgb=False
 )

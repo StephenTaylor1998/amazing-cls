@@ -47,10 +47,8 @@ default_stride = [1, 2, 2, 2]
 class TAResNetCifar(nn.Module):
     def __init__(self, block_type, layers: list, width: list = None, stride: list = None, num_classes=10,
                  in_channels=3, zero_init_residual=False, groups=1, width_per_group=64,
-                 replace_stride_with_dilation=None, norm_layer=None, cnf_list: tuple = ('add',), neuron_cfg=None,
-                 time_step=4):
+                 replace_stride_with_dilation=None, norm_layer=None, cnf_list: tuple = ('add',), neuron_cfg=None):
         super().__init__()
-        self.time_step = time_step
         block = MODELS.get(block_type)
         if norm_layer is None:
             norm_layer = layer.BatchNorm2d
@@ -142,40 +140,8 @@ class TAResNetCifar(nn.Module):
 
         return nn.Sequential(*layers)
 
-    # def _forward_impl(self, x):
-    #     functional.reset_net(self)
-    #     if self.time_step is not None:
-    #         x = x.unsqueeze(0).repeat(self.time_step, 1, 1, 1, 1)
-    #     else:
-    #         x = torch.permute(x, (1, 0, 2, 3, 4))
-    #
-    #     x = self.conv1(x)
-    #     x = self.bn1(x)
-    #     x = self.sn1(x)
-    #
-    #     x = self.layer1(x)
-    #     x = self.time_adaptive1(x)
-    #     x = self.layer2(x)
-    #     x = self.time_adaptive2(x)
-    #     x = self.layer3(x)
-    #     x = self.time_adaptive3(x)
-    #     x = self.layer4(x)
-    #
-    #     x = self.avgpool(x)
-    #     if self.avgpool.step_mode == 's':
-    #         x = torch.flatten(x, 1)
-    #     elif self.avgpool.step_mode == 'm':
-    #         x = torch.flatten(x, 2)
-    #
-    #     x = self.fc(x)
-    #     return x.mean(0),
-
     def _forward_impl(self, x):
         functional.reset_net(self)
-        if self.time_step is not None:
-            x = x.unsqueeze(0).repeat(self.time_step, 1, 1, 1, 1)
-        else:
-            x = torch.permute(x, (1, 0, 2, 3, 4))
 
         x = self.conv1(x)
         x = self.bn1(x)
@@ -196,7 +162,7 @@ class TAResNetCifar(nn.Module):
             x = torch.flatten(x, 2)
 
         x = self.fc(x)
-        return x.mean(0),
+        return x,
 
     def forward(self, x):
         return self._forward_impl(x)

@@ -1,11 +1,12 @@
 # dataset settings
 
 dataset_type = 'DVSCifar10'
-time_step = 10
+time_step = 16
 num_bins = 31
 
-
 data_preprocessor = dict(
+    type='DVSPreprocessor',
+    time_step=time_step,
     num_classes=10,
     to_rgb=False
 )

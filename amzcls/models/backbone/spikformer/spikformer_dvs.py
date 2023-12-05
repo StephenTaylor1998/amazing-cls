@@ -178,7 +178,7 @@ class SPS(nn.Module):
 @BACKBONES.register_module()
 class SpikformerDVS(nn.Module):
     def __init__(self, img_size_h=128, img_size_w=128, patch_size=16, in_channels=2, num_classes=10, embed_dims=256,
-                 num_heads=16, mlp_ratios=4, norm_layer=None, depths=2, time_step=None, neuron_cfg=None):
+                 num_heads=16, mlp_ratios=4, norm_layer=None, depths=2, neuron_cfg=None):
         super().__init__()
         if neuron_cfg is None:
             print(f"[INFO] Using default neuron `{default_neuron}`.\n"
@@ -186,7 +186,6 @@ class SpikformerDVS(nn.Module):
             neuron_cfg = default_neuron
         self.num_classes = num_classes
         self.depths = depths
-        self.time_step = time_step
         norm_layer = partial(LayerNorm, eps=1e-6) if norm_layer is None else norm_layer
 
         patch_embed = SPS(img_size_h=img_size_h,
@@ -245,13 +244,8 @@ class SpikformerDVS(nn.Module):
 
     def forward(self, x):
         functional.reset_net(self)
-        if self.time_step is not None:
-            x = x.unsqueeze(0).repeat(self.time_step, 1, 1, 1, 1)
-        else:
-            x = torch.permute(x, (1, 0, 2, 3, 4))
-
         x = self.forward_features(x)
-        x = self.head(x.mean(0))
+        x = self.head(x)
         # x = self.head(x[2:].mean(0))
         return x,
 

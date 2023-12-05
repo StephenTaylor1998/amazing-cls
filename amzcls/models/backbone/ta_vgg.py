@@ -14,9 +14,8 @@ default_width = [64, 128, 256, 512]
 @MODELS.register_module()
 class TAVGG11(nn.Module):
     def __init__(self, layers: list, width: list = None, num_classes=10,
-                 in_channels=3, neuron_cfg=None, time_step=4):
+                 in_channels=3, neuron_cfg=None):
         super(TAVGG11, self).__init__()
-        self.time_step = time_step
         if width is None:
             print(f"[INFO] Using default width `{default_width}`.\n"
                   "\tfrom `amzcls.models.backbones.spike_resnet`.")
@@ -44,7 +43,6 @@ class TAVGG11(nn.Module):
 
     def _forward_impl(self, x):
         functional.reset_net(self)
-        x = torch.permute(x, (1, 0, 2, 3, 4))
 
         x = self.layer1(x)
         x = self.mpool1(x)
@@ -64,30 +62,7 @@ class TAVGG11(nn.Module):
             x = torch.flatten(x, 2)
 
         x = self.fc(x)
-        return x.mean(0),
-
-    def _forward_impl_static(self, x):
-        functional.reset_net(self)
-        x = x.unsqueeze(0)
-        x = x.repeat(self.time_step // 2, 1, 1, 1, 1)
-        x = self.layer1(x)
-        x = self.mpool1(x)
-        x = self.layer2(x)
-        x = self.mpool2(x)
-        x = x.repeat(self.time_step // 2, 1, 1, 1, 1)
-        x = self.layer3(x)
-        x = self.mpool3(x)
-        x = self.layer4(x)
-        x = self.avgpool(x)
-        if self.avgpool.step_mode == 's':
-            x = torch.flatten(x, 1)
-        elif self.avgpool.step_mode == 'm':
-            x = torch.flatten(x, 2)
-        x = self.fc(x)
-        return x.mean(0),
+        return x,
 
     def forward(self, x):
-        if self.time_step is not None:
-            return self._forward_impl_static(x)
-        else:
-            return self._forward_impl(x)
+        return self._forward_impl(x)

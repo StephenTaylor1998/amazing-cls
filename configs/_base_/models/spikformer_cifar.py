@@ -2,17 +2,9 @@
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='TAVGG11',
-        layers=[1, 1, 2, 4],
-        width=[64, 128, 256, 512],
+        type='SpikformerCifar',
         num_classes=10,
         in_channels=3,
-        neuron_cfg=dict(
-            type='IFNode',
-            surrogate_function=dict(
-                type='Sigmoid'
-            )
-        ),
     ),
     head=dict(
         type='SpikeClsHead',
@@ -20,3 +12,4 @@ model = dict(
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
     ),
 )
+

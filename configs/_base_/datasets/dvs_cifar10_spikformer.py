@@ -14,22 +14,9 @@ augmentation_space = {
     "Cutout": ['torch.linspace(1.0, 30.0, 31)', True],
 }
 
-# augmentation_space = {
-#     # op_name: (magnitudes, signed)
-#     "Identity": ['torch.tensor(0.0)', False],
-#     "ShearX": ['torch.linspace(0.0, 0.3, 31)', True],
-#     "ShearY": ['torch.linspace(0.0, 0.3, 31)', True],
-#     "TranslateX": ['torch.linspace(0.0, 20.0, num_bins)', True],
-#     "TranslateY": ['torch.linspace(0.0, 20.0, num_bins)', True],
-#     "Rotate": ['torch.linspace(0.0, 30.0, num_bins)', True],
-#     "Cutout": ['torch.linspace(0.0, 30.0, num_bins)', True],
-#     "Brightness": ['torch.linspace(0.0, 0.3, 31)', True],
-#     "Color": ['torch.linspace(0.0, 0.3, 31)', True],
-#     "Contrast": ['torch.linspace(0.0, 0.3, 31)', True],
-#     "Sharpness": ['torch.linspace(0.0, 0.3, 31)', True],
-# }
-
 data_preprocessor = dict(
+    type='DVSPreprocessor',
+    time_step=time_step,
     num_classes=10,
     to_rgb=False
 )
