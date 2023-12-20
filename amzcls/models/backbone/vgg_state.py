@@ -35,15 +35,16 @@ default_width = [64, 128, 256, 512]
 
 
 @MODELS.register_module()
-class VGG11(nn.Module):
+class StateVGG11(nn.Module):
     def __init__(self, layers: list, width: list = None, num_classes=10,
                  in_channels=3, neuron_cfg=None, h=128, w=128):
-        super(VGG11, self).__init__()
+        super(StateVGG11, self).__init__()
         if width is None:
             print(f"[INFO] Using default width `{default_width}`.\n"
                   "\tfrom `amzcls.models.backbones.spike_resnet`.")
             width = default_width
-        assert not neuron_cfg['type'].startswith('State'), '[INFO][AMZCLS] Only support `StateLIFNode`.'
+        assert neuron_cfg['type'].startswith('State'), \
+            f'[INFO][AMZCLS] Only support `StateLIFNode`, not `{neuron_cfg["type"]}`.'
         assert neuron_cfg is not None, f"[INFO] from `amzcls.models.backbones.spike_resnet`."
 
         self.dilation = 1
