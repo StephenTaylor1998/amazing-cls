@@ -2,14 +2,13 @@
 
 dataset_type = 'DVSCifar10'
 time_step = 16
-num_bins = 31
 
 augmentation_space = {
     "Identity": ['torch.tensor(0.0)', False],
     "ShearX": ['torch.linspace(-0.3, 0.3, 31)', True],
     # "ShearY": ['torch.linspace(-0.3, 0.3, 31)', True],
-    "TranslateX": ['torch.linspace(-0.5, 5.0, 31)', True],
-    "TranslateY": ['torch.linspace(-0.5, 5.0, 31)', True],
+    "TranslateX": ['torch.linspace(-5.0, 5.0, 31)', True],
+    "TranslateY": ['torch.linspace(-5.0, 5.0, 31)', True],
     "Rotate": ['torch.linspace(-30.0, 30.0, 31)', True],
     "Cutout": ['torch.linspace(1.0, 30.0, 31)', True],
 }

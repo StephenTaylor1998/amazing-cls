@@ -153,7 +153,7 @@ default_stride = [1, 2, 2, 2]
 
 @MODELS.register_module()
 class MSResNetCifar(nn.Module):
-    def __init__(self, block_type, layers: list, width: list = None, stride: list = None, num_classes=10,
+    def __init__(self, block_type, layers: list, width: list = None, stride: list = None,
                  in_channels=3, zero_init_residual=False, groups=1, width_per_group=64,
                  replace_stride_with_dilation=None, norm_layer=None, cnf_list: tuple = ('add',), neuron_cfg=None):
         super().__init__()
@@ -196,8 +196,6 @@ class MSResNetCifar(nn.Module):
                                        cnf_list=cnf_list, neuron_cfg=neuron_cfg)
         self.layer4 = self._make_layer(block, width[3], layers[3], stride[3], dilate=replace_stride_with_dilation[2],
                                        cnf_list=cnf_list, neuron_cfg=neuron_cfg)
-        self.avgpool = layer.AdaptiveAvgPool2d((1, 1))
-        self.fc = layer.Linear(width[3] * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, layer.Conv2d):
@@ -255,19 +253,6 @@ class MSResNetCifar(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-
-        x = self.avgpool(x)
-        if self.avgpool.step_mode == 's':
-            x = torch.flatten(x, 1)
-        elif self.avgpool.step_mode == 'm':
-            x = torch.flatten(x, 2)
-
-        x = self.sn1(x)
-        x = self.fc(x)
-        # 0~3 91.89
-        # 1~3 91.89
-        # 2~3 91.97
-        # 3   92.34
         return x,
 
     def forward(self, x):

@@ -8,13 +8,13 @@ _base_ = [
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        num_classes=11,
         neuron_cfg=dict(
             type='LIFNode',
         ),
         in_channels=2,
     ),
     head=dict(
+        num_classes=11,
         trainable=True,  # #############
         time_step=16,  # ################
         loss=dict(

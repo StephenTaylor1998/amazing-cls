@@ -4,8 +4,9 @@ from amzcls.models.builder import (
     BACKBONES, CLASSIFIERS, HEADS, LOSSES, NECKS, build_backbone, build_classifier, build_head, build_loss, build_neck
 )
 from .backbone import *
-from .heads import *
 from .classifiers import *
+from .heads import *
+from .necks import *
 from .utils import *  # noqa: F401,F403
 
 __all__ = [

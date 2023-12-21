@@ -5,9 +5,17 @@ _base_ = [
     '../_base_/default_runtime.py'
 ]
 
+data_preprocessor = dict(
+    type='StaticPreprocessor',
+    time_step=4,
+)
+
 # model settings
 model = dict(
     head=dict(
+        num_classes=10,
+        enable_time_embed=True,
+        time_step=4,
         loss=dict(use_sigmoid=True),
         cal_acc=False,
     ),
@@ -23,3 +31,25 @@ train_dataloader = dict(sampler=dict(type='RepeatAugSampler', shuffle=True))
 optim_wrapper = dict(
     optimizer=dict(lr=0.008),
     paramwise_cfg=dict(bias_decay_mult=0., norm_decay_mult=0.))
+
+param_scheduler = [
+    # warm up learning rate scheduler
+    dict(
+        type='LinearLR',
+        start_factor=0.0001,
+        by_epoch=True,
+        begin=0,
+        end=5,
+        # update by iter
+        convert_to_iter_based=True),
+    # main learning rate scheduler
+    dict(
+        type='CosineAnnealingLR',
+        T_max=295,
+        eta_min=1.0e-6,
+        by_epoch=True,
+        begin=5,
+        end=300)
+]
+
+train_cfg = dict(by_epoch=True, max_epochs=300)

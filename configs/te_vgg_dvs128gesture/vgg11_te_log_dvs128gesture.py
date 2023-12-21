@@ -1,6 +1,6 @@
 _base_ = [
-    '../_base_/models/spikformer_dvs.py',
-    '../_base_/datasets/dvs128gesture_nda.py',
+    '../_base_/models/vgg11_dvs.py',
+    '../_base_/datasets/dvs128gesture_spikformer.py',
     '../_base_/default_runtime.py'
 ]
 
@@ -8,11 +8,16 @@ _base_ = [
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='SpikformerDVS',
-        num_classes=11,
+        neuron_cfg=dict(
+            type='LIFNode',
+        ),
         in_channels=2,
     ),
     head=dict(
+        type='LogClsHead',
+        num_classes=11,
+        time_step=16,
+        enable_time_embed=False,
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,
@@ -56,7 +61,7 @@ param_scheduler = [
     dict(type='CosineAnnealingLR', eta_min=1e-5, by_epoch=True, begin=30)
 ]
 
-train_cfg = dict(by_epoch=True, max_epochs=250, val_interval=1)
+train_cfg = dict(by_epoch=True, max_epochs=150, val_interval=1)
 # train, val, test setting
 val_cfg = dict()
 test_cfg = dict()

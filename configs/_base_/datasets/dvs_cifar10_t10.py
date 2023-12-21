@@ -1,6 +1,7 @@
 # dataset settings
 dataset_type = 'DVSCifar10'
 time_step = 10
+
 data_preprocessor = dict(
     type='DVSPreprocessor',
     time_step=time_step,

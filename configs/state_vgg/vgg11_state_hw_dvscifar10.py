@@ -1,6 +1,5 @@
 _base_ = [
-    '../_base_/models/ta_vgg11.py',
-    # '../_base_/datasets/dvs_cifar10_t16.py',
+    '../_base_/models/vgg11_dvs.py',
     '../_base_/datasets/dvs_cifar10_spikformer.py',
     '../_base_/default_runtime.py'
 ]
@@ -10,12 +9,12 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         neuron_cfg=dict(
-            type='LIFNode',
+            type='LazyStateHWLIFNode',
         ),
-        time_step=None,
         in_channels=2,
     ),
     head=dict(
+        num_classes=10,
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,

@@ -7,7 +7,6 @@ model = dict(
         layers=[3, 4, 6, 3],
         width=[64, 128, 256, 512],
         stride=[1, 2, 2, 2],
-        num_classes=1000,
         in_channels=3,
         zero_init_residual=True,
         groups=1, width_per_group=64,
@@ -21,9 +20,14 @@ model = dict(
             )
         ),
     ),
+    neck=dict(
+        type='SpikeGlobalAveragePooling',
+    ),
     head=dict(
-        type='SpikeClsHead',
+        type='SpikeLinearClsHead',
+        num_classes=1000,
+        in_channels=2048,
         cal_acc=True,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
-    )
+    ),
 )

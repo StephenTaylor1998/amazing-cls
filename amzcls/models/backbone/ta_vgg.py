@@ -13,7 +13,7 @@ default_width = [64, 128, 256, 512]
 
 @MODELS.register_module()
 class TAVGG11(nn.Module):
-    def __init__(self, layers: list, width: list = None, num_classes=10,
+    def __init__(self, layers: list, width: list = None,
                  in_channels=3, neuron_cfg=None):
         super(TAVGG11, self).__init__()
         if width is None:
@@ -35,8 +35,6 @@ class TAVGG11(nn.Module):
         self.mpool3 = layer.AvgPool2d(2, 2)
         self.time_adaptive3 = TSVec(rate=2)
         self.layer4 = make_layers(width[2], width[3], layers[3], neuron_cfg)
-        self.avgpool = layer.AdaptiveAvgPool2d((1, 1))
-        self.fc = layer.Linear(width[3], num_classes)
 
         functional.set_step_mode(self, 'm')
         functional.set_backend(self, backend='cupy', instance=NODES.get(neuron_cfg['type']))
@@ -54,14 +52,6 @@ class TAVGG11(nn.Module):
         x = self.mpool3(x)
         x = self.time_adaptive3(x)
         x = self.layer4(x)
-        x = self.avgpool(x)
-
-        if self.avgpool.step_mode == 's':
-            x = torch.flatten(x, 1)
-        elif self.avgpool.step_mode == 'm':
-            x = torch.flatten(x, 2)
-
-        x = self.fc(x)
         return x,
 
     def forward(self, x):
