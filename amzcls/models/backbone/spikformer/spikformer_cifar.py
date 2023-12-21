@@ -173,14 +173,13 @@ class SPS(nn.Module):
 
 @BACKBONES.register_module()
 class SpikformerCifar(nn.Module):
-    def __init__(self, img_size_h=32, img_size_w=32, patch_size=4, in_channels=3, num_classes=10, embed_dims=384,
+    def __init__(self, img_size_h=32, img_size_w=32, patch_size=4, in_channels=3, embed_dims=384,
                  num_heads=12, mlp_ratios=4, norm_layer=None, depths=4, neuron_cfg=None):
         super().__init__()
         if neuron_cfg is None:
             print(f"[INFO] Using default neuron `{default_neuron}`.\n"
                   "\tfrom `amzcls.models.backbones.spikformer_dvs`.")
             neuron_cfg = default_neuron
-        self.num_classes = num_classes
         self.depths = depths
         norm_layer = partial(LayerNorm, eps=1e-6) if norm_layer is None else norm_layer
 
@@ -198,10 +197,7 @@ class SpikformerCifar(nn.Module):
         setattr(self, f"patch_embed", patch_embed)
         setattr(self, f"block", block)
 
-        # classification head
-        self.head = nn.Linear(embed_dims, num_classes) if num_classes > 0 else nn.Identity()
         self.apply(self._init_weights)
-
         functional.set_step_mode(self, 'm')
         functional.set_backend(self, backend='cupy', instance=NODES.get(neuron_cfg['type']))
 
@@ -229,21 +225,19 @@ class SpikformerCifar(nn.Module):
         x = patch_embed(x)
         for blk in block:
             x = blk(x)
-        return x.mean(3)
+        return x
 
     def forward(self, x):
         functional.reset_net(self)
         x = self.forward_features(x)
-        x = self.head(x)
-        return x,
+        return x.mean(3),
 
 
 @BACKBONES.register_module()
 def spikformer_cifar(**kwargs):
     model = SpikformerCifar(
         patch_size=4, embed_dims=384, num_heads=12, mlp_ratios=4,
-        in_channels=3, num_classes=10,
-        norm_layer=partial(LayerNorm, eps=1e-6), depths=4,
+        in_channels=3, norm_layer=partial(LayerNorm, eps=1e-6), depths=4,
         **kwargs
     )
     model.default_cfg = _cfg()

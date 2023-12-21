@@ -177,14 +177,14 @@ class SPS(nn.Module):
 
 @BACKBONES.register_module()
 class SpikformerDVS(nn.Module):
-    def __init__(self, img_size_h=128, img_size_w=128, patch_size=16, in_channels=2, num_classes=10, embed_dims=256,
+    def __init__(self, img_size_h=128, img_size_w=128, patch_size=16, in_channels=2, embed_dims=256,
                  num_heads=16, mlp_ratios=4, norm_layer=None, depths=2, neuron_cfg=None):
         super().__init__()
         if neuron_cfg is None:
             print(f"[INFO] Using default neuron `{default_neuron}`.\n"
                   "\tfrom `amzcls.models.backbones.spikformer_dvs`.")
             neuron_cfg = default_neuron
-        self.num_classes = num_classes
+
         self.depths = depths
         norm_layer = partial(LayerNorm, eps=1e-6) if norm_layer is None else norm_layer
 
@@ -204,10 +204,6 @@ class SpikformerDVS(nn.Module):
         setattr(self, f"patch_embed", patch_embed)
         setattr(self, f"pos_embed", pos_embed)
         setattr(self, f"block", block)
-
-        self.norm = norm_layer(embed_dims)
-        # classification head 这里不需要脉冲，因为输入的是在T时长平均发射值
-        self.head = layer.Linear(embed_dims, num_classes) if num_classes > 0 else nn.Identity()
 
         pos_embed = getattr(self, f"pos_embed")
         trunc_normal_(pos_embed, std=.02)
@@ -240,14 +236,12 @@ class SpikformerDVS(nn.Module):
         x = patch_embed(x)
         for blk in block:
             x = blk(x)
-        return x.mean(3)
+        return x
 
     def forward(self, x):
         functional.reset_net(self)
         x = self.forward_features(x)
-        x = self.head(x)
-        # x = self.head(x[2:].mean(0))
-        return x,
+        return x.mean(3),
 
 
 @BACKBONES.register_module()
