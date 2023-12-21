@@ -5,7 +5,6 @@ model = dict(
         type='TAVGG11',
         layers=[1, 1, 2, 4],
         width=[64, 128, 256, 512],
-        num_classes=10,
         in_channels=3,
         neuron_cfg=dict(
             type='IFNode',
@@ -14,9 +13,14 @@ model = dict(
             )
         ),
     ),
+    neck=dict(
+        type='SpikeGlobalAveragePooling',
+    ),
     head=dict(
-        type='SpikeClsHead',
+        type='SpikeLinearClsHead',
+        num_classes=10,
+        in_channels=512,
         cal_acc=True,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
-    ),
+    )
 )

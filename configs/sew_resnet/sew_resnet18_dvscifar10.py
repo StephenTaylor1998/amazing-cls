@@ -4,6 +4,11 @@ _base_ = [
     '../_base_/default_runtime.py'
 ]
 
+data_preprocessor = dict(
+    type='StaticPreprocessor',
+    time_step=4,
+)
+
 # model settings
 model = dict(
     type='ImageClassifier',
@@ -11,7 +16,6 @@ model = dict(
         neuron_cfg=dict(
             type='LIFNode',
         ),
-        time_step=None,
         in_channels=2,
     ),
     head=dict(

@@ -9,10 +9,10 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='SpikformerDVS',
-        num_classes=11,
         in_channels=2,
     ),
     head=dict(
+        num_classes=11,
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,

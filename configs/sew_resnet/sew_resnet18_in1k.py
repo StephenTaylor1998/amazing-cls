@@ -5,6 +5,11 @@ _base_ = [
     '../_base_/default_runtime.py'
 ]
 
+data_preprocessor = dict(
+    type='StaticPreprocessor',
+    time_step=4,
+)
+
 # optimizer
 optim_wrapper = dict(
     type='AmpOptimWrapper',

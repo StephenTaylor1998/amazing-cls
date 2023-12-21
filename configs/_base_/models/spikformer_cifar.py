@@ -3,13 +3,21 @@ model = dict(
     type='ImageClassifier',
     backbone=dict(
         type='SpikformerCifar',
-        num_classes=10,
         in_channels=3,
+        img_size_h=32,
+        img_size_w=32,
+        patch_size=4,
+        embed_dims=384,
+        num_heads=12,
+        mlp_ratios=4,
+        norm_layer=None,
+        depths=4,
     ),
     head=dict(
-        type='SpikeClsHead',
+        type='SpikeLinearClsHead',
+        num_classes=10,
+        in_channels=384,
         cal_acc=True,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
-    ),
+    )
 )
-
