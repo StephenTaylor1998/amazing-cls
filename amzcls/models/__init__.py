@@ -7,6 +7,7 @@ from .backbone import *
 from .classifiers import *
 from .heads import *
 from .necks import *
+from .selfsup import *
 from .utils import *  # noqa: F401,F403
 
 __all__ = [

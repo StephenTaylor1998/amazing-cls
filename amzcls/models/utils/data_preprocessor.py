@@ -1,7 +1,8 @@
 from numbers import Number
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union
 
 import torch
+from mmpretrain.models import SelfSupDataPreprocessor
 from mmpretrain.models.utils import ClsDataPreprocessor
 from mmpretrain.registry import MODELS
 from torch import Tensor
@@ -50,6 +51,43 @@ class DVSPreprocessor(ClsDataPreprocessor):
     def forward(self, data: dict, training: bool = False) -> dict:
         data = super(DVSPreprocessor, self).forward(data, training)
         data['inputs'] = process_dvs_data(data['inputs'])
+        return data
+
+
+@MODELS.register_module()
+class StaticSelfSupDataPreprocessor(SelfSupDataPreprocessor):
+    """Image pre-processor for operations, like normalization and bgr to rgb.
+
+    Compared with the :class:`mmengine.ImgDataPreprocessor`, this module
+    supports ``inputs`` as torch.Tensor or a list of torch.Tensor.
+    """
+
+    def __init__(self,
+                 time_step: int = None,
+                 mean: Optional[Sequence[Union[float, int]]] = None,
+                 std: Optional[Sequence[Union[float, int]]] = None,
+                 pad_size_divisor: int = 1,
+                 pad_value: Union[float, int] = 0,
+                 to_rgb: bool = False,
+                 bgr_to_rgb: bool = False,
+                 rgb_to_bgr: bool = False,
+                 non_blocking: Optional[bool] = False):
+        super().__init__(
+            mean=mean,
+            std=std,
+            pad_size_divisor=pad_size_divisor,
+            pad_value=pad_value,
+            to_rgb=to_rgb,
+            bgr_to_rgb=bgr_to_rgb,
+            rgb_to_bgr=rgb_to_bgr,
+            non_blocking=non_blocking)
+
+        self.time_step = time_step
+        self._channel_conversion = to_rgb or bgr_to_rgb or rgb_to_bgr
+
+    def forward(self, data: dict, training: bool = False):
+        data = super(StaticSelfSupDataPreprocessor, self).forward(data, training)
+        data['inputs'] = [process_static_data(sample, self.time_step) for sample in data['inputs']]
         return data
 
 
