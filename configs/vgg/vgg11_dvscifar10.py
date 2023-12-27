@@ -14,7 +14,6 @@ model = dict(
         in_channels=2,
     ),
     head=dict(
-        num_classes=10,
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,
@@ -25,7 +24,7 @@ model = dict(
     ),
     train_cfg=dict(augments=[
         dict(type='Mixup', alpha=0.5),
-        # dict(type='CutMix', alpha=1.0)
+        dict(type='CutMix', alpha=1.0)
     ])
 )
 

@@ -1,19 +1,17 @@
 _base_ = [
-    '../_base_/models/ta_vgg11.py',
+    '../_base_/models/spikformer_dvs.py',
     '../_base_/datasets/dvs_cifar10_spikformer.py',
     '../_base_/default_runtime.py'
 ]
-
+'TETLinearClsHead'
 # model settings
 model = dict(
     type='ImageClassifier',
-    backbone=dict(
-        neuron_cfg=dict(
-            type='LIFNode',
-        ),
-        in_channels=2,
-    ),
     head=dict(
+        type='TETLinearClsHead',
+        num_classes=10,
+        in_channels=256,
+        lamb=1e-3,
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,
@@ -24,7 +22,7 @@ model = dict(
     ),
     train_cfg=dict(augments=[
         dict(type='Mixup', alpha=0.5),
-        # dict(type='CutMix', alpha=1.0)
+        dict(type='CutMix', alpha=1.0)
     ])
 )
 
