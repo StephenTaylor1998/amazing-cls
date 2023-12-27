@@ -143,16 +143,14 @@ class TETLinearClsHead(LinearClsHead):
         # The part can be traced by torch.fx
         cls_score = self.fc(self.pre_logits(feats))
         time, batch, dim = cls_score.shape
-        # mse
-        y = torch.zeros_like(cls_score).fill_(self.means)
-        loss_mse = torch.nn.functional.mse_loss(cls_score, y)
 
-        # cross_entropy
-        cls_score = cls_score.view(time * batch, dim)
-        data_samples = data_samples * time
+        # cross_entropy [after voting]
+        loss_mse = self._get_loss(cls_score.mean(0), data_samples, **kwargs)
 
-        # The part can not be traced by torch.fx
-        losses = self._get_loss(cls_score, data_samples, **kwargs)
+        # cross_entropy [before voting]
+        losses = self._get_loss(cls_score.view(time * batch, dim), data_samples * time, **kwargs)
 
-        losses['loss'] = losses['loss'] * (1.-self.lamb) + self.lamb * loss_mse
+        # merge loss
+        losses['loss'] = losses['loss'] * (1.-self.lamb) + loss_mse['loss'] * self.lamb
+
         return losses

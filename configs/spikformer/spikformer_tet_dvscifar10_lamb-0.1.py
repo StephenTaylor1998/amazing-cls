@@ -1,22 +1,17 @@
 _base_ = [
-    '../_base_/models/vgg11_dvs.py',
+    '../_base_/models/spikformer_dvs.py',
     '../_base_/datasets/dvs_cifar10_spikformer.py',
     '../_base_/default_runtime.py'
 ]
-
+'TETLinearClsHead'
 # model settings
 model = dict(
     type='ImageClassifier',
-    backbone=dict(
-        neuron_cfg=dict(
-            type='LazyStateLIFNode',
-        ),
-        in_channels=2,
-    ),
     head=dict(
-        enable_time_embed=True,
+        type='TETLinearClsHead',
         num_classes=10,
-        time_step=16,
+        in_channels=256,
+        lamb=0.1,
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,
@@ -27,7 +22,7 @@ model = dict(
     ),
     train_cfg=dict(augments=[
         dict(type='Mixup', alpha=0.5),
-        # dict(type='CutMix', alpha=1.0)
+        dict(type='CutMix', alpha=1.0)
     ])
 )
 
@@ -60,7 +55,7 @@ param_scheduler = [
     dict(type='CosineAnnealingLR', eta_min=1e-5, by_epoch=True, begin=30)
 ]
 
-train_cfg = dict(by_epoch=True, max_epochs=300, val_interval=1)
+train_cfg = dict(by_epoch=True, max_epochs=150, val_interval=1)
 # train, val, test setting
 val_cfg = dict()
 test_cfg = dict()
