@@ -7,7 +7,7 @@ from spikingjelly.activation_based import layer, functional
 
 from amzcls.models.builder import BACKBONES
 from amzcls.neurons import build_node, NODES
-from amzcls.neurons.layer import LayerNorm
+from amzcls.neurons.layer import LayerNorm, TimeEfficientLayerNorm, TimeEfficientBatchNorm2d
 from .utils import to_2tuple, trunc_normal_, _cfg
 
 __all__ = ['spikformer_dvs', 'SpikformerDVS']
@@ -109,7 +109,7 @@ class Block(nn.Module):
 
 class SPS(nn.Module):
     def __init__(self, img_size_h=128, img_size_w=128, patch_size=4, in_channels=2, embed_dims=256,
-                 neuron_cfg=None):
+                 tdbn_step=None, neuron_cfg=None):
         super().__init__()
         self.image_size = [img_size_h, img_size_w]
         patch_size = to_2tuple(patch_size)
@@ -117,33 +117,37 @@ class SPS(nn.Module):
         self.C = in_channels
         self.H, self.W = self.image_size[0] // patch_size[0], self.image_size[1] // patch_size[1]
         self.num_patches = self.H * self.W
+        if tdbn_step is None:
+            norm_layer = layer.BatchNorm2d
+        else:
+            norm_layer = partial(TimeEfficientBatchNorm2d, time_step=tdbn_step)
         self.proj_conv = layer.Conv2d(
             in_channels, embed_dims // 8, kernel_size=(3, 3), stride=(1, 1), padding=1, bias=False)
-        self.proj_bn = layer.BatchNorm2d(embed_dims // 8)
+        self.proj_bn = norm_layer(embed_dims // 8)
         self.proj_lif = build_node(neuron_cfg)
         self.maxpool = layer.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
 
         self.proj_conv1 = layer.Conv2d(
             embed_dims // 8, embed_dims // 4, kernel_size=(3, 3), stride=(1, 1), padding=1, bias=False)
-        self.proj_bn1 = layer.BatchNorm2d(embed_dims // 4)
+        self.proj_bn1 = norm_layer(embed_dims // 4)
         self.proj_lif1 = build_node(neuron_cfg)
         self.maxpool1 = layer.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
 
         self.proj_conv2 = layer.Conv2d(
             embed_dims // 4, embed_dims // 2, kernel_size=(3, 3), stride=(1, 1), padding=1, bias=False)
-        self.proj_bn2 = layer.BatchNorm2d(embed_dims // 2)
+        self.proj_bn2 = norm_layer(embed_dims // 2)
         self.proj_lif2 = build_node(neuron_cfg)
         self.maxpool2 = layer.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
 
         self.proj_conv3 = layer.Conv2d(
             embed_dims // 2, embed_dims, kernel_size=(3, 3), stride=(1, 1), padding=1, bias=False)
-        self.proj_bn3 = layer.BatchNorm2d(embed_dims)
+        self.proj_bn3 = norm_layer(embed_dims)
         self.proj_lif3 = build_node(neuron_cfg)
         self.maxpool3 = layer.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
 
         self.rpe_conv = layer.Conv2d(
             embed_dims, embed_dims, kernel_size=(3, 3), stride=(1, 1), padding=1, bias=False)
-        self.rpe_bn = layer.BatchNorm2d(embed_dims)
+        self.rpe_bn = norm_layer(embed_dims)
         self.rpe_lif = build_node(neuron_cfg)
 
     def forward(self, x):
@@ -178,7 +182,7 @@ class SPS(nn.Module):
 @BACKBONES.register_module()
 class SpikformerDVS(nn.Module):
     def __init__(self, img_size_h=128, img_size_w=128, patch_size=16, in_channels=2, embed_dims=256,
-                 num_heads=16, mlp_ratios=4, norm_layer=None, depths=2, neuron_cfg=None):
+                 num_heads=16, mlp_ratios=4, norm_layer=None, tdbn_step=None, depths=2, neuron_cfg=None):
         super().__init__()
         if neuron_cfg is None:
             print(f"[INFO] Using default neuron `{default_neuron}`.\n"
@@ -193,9 +197,9 @@ class SpikformerDVS(nn.Module):
                           patch_size=patch_size,
                           in_channels=in_channels,
                           embed_dims=embed_dims,
+                          tdbn_step=tdbn_step,
                           neuron_cfg=neuron_cfg)
-        num_patches = patch_embed.num_patches
-        pos_embed = nn.Parameter(torch.zeros(1, num_patches, embed_dims))
+        pos_embed = nn.Parameter(torch.zeros(1, patch_embed.num_patches, embed_dims))
 
         block = nn.ModuleList([Block(
             dim=embed_dims, num_heads=num_heads, mlp_ratio=mlp_ratios, norm_layer=norm_layer, neuron_cfg=neuron_cfg)
@@ -250,6 +254,17 @@ def spikformer_dvs(**kwargs):
         patch_size=16, embed_dims=256, num_heads=16, mlp_ratios=4,
         in_channels=2, num_classes=10,
         norm_layer=partial(LayerNorm, eps=1e-6), depths=2,
+        **kwargs
+    )
+    model.default_cfg = _cfg()
+    return model
+
+
+@BACKBONES.register_module()
+def spikformer_teln_dvs(teln_step, norm_layer, **kwargs):
+    # delete norm_layer
+    model = SpikformerDVS(
+        norm_layer=partial(TimeEfficientLayerNorm, time_step=teln_step, eps=1e-6),
         **kwargs
     )
     model.default_cfg = _cfg()
