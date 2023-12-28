@@ -1,6 +1,8 @@
 from typing import Optional, Union, Callable
 
+import torch
 from spikingjelly.activation_based import base, functional
+from spikingjelly.activation_based import layer
 from torch import Tensor
 from torch import nn
 from torch.nn import functional as F
@@ -69,3 +71,36 @@ class LayerNorm(nn.LayerNorm, base.StepModule):
 
         elif self.step_mode == 'm':
             return functional.seq_to_ann_forward(x, super().forward)
+
+
+class tdBatchNorm2d(nn.BatchNorm2d):
+    def __init__(self, channel, *args, **kwargs):
+        super(tdBatchNorm2d, self).__init__(channel, *args, **kwargs)
+        self.weight.data.mul_(0.5)
+
+    def forward(self, x):
+        time, batch, *chw = x.shape
+        x = super().forward(x.reshape(time * batch, *chw))
+        return x.view(time, batch, *chw).contiguous()
+
+
+class TimeEfficientBatchNorm2d(nn.Module):
+    def __init__(self, out_plane, time_step=1, *args, **kwargs):
+        super(TimeEfficientBatchNorm2d, self).__init__()
+        self.bn = layer.BatchNorm2d(out_plane, *args, **kwargs)
+        self.time_embed = nn.Parameter(torch.ones(time_step))
+
+    def forward(self, x):
+        x = self.bn(x) * torch.einsum('i...,i->i...', x, self.time_embed)
+        return x
+
+
+class TimeEfficientLayerNorm(nn.Module):
+    def __init__(self, out_plane, time_step=1, *args, **kwargs):
+        super(TimeEfficientLayerNorm, self).__init__()
+        self.ln = LayerNorm(out_plane, *args, **kwargs)
+        self.time_embed = nn.Parameter(torch.ones(time_step))
+
+    def forward(self, x):
+        x = self.ln(x) * torch.einsum('i...,i->i...', x, self.time_embed)
+        return x
