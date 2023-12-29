@@ -249,11 +249,9 @@ class SpikformerDVS(nn.Module):
 
 
 @BACKBONES.register_module()
-def spikformer_dvs(**kwargs):
+def spikformer_dvs(norm_layer, **kwargs):
     model = SpikformerDVS(
-        patch_size=16, embed_dims=256, num_heads=16, mlp_ratios=4,
-        in_channels=2, num_classes=10,
-        norm_layer=partial(LayerNorm, eps=1e-6), depths=2,
+        norm_layer=partial(LayerNorm, eps=1e-6),
         **kwargs
     )
     model.default_cfg = _cfg()
@@ -269,3 +267,5 @@ def spikformer_teln_dvs(teln_step, norm_layer, **kwargs):
     )
     model.default_cfg = _cfg()
     return model
+
+
