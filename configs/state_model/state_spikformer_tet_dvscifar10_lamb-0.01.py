@@ -10,6 +10,8 @@ model = dict(
     backbone=dict(
         neuron_cfg=dict(
             type='LazyStateLIFNode',
+            v_reset=None,  # Todo: check here {default: v_reset=0.}
+            detach_reset=True,  # Todo: check here {default: detach_reset=False}
         ),
     ),
     head=dict(

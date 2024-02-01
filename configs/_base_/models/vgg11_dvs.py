@@ -8,6 +8,8 @@ model = dict(
         in_channels=3,
         neuron_cfg=dict(
             type='LIFNode',
+            v_reset=None,  # Todo: check here {default: v_reset=0.}
+            detach_reset=True,  # Todo: check here {default: detach_reset=False}
             surrogate_function=dict(
                 type='Sigmoid'
             )

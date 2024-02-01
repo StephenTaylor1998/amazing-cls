@@ -3,6 +3,7 @@ _base_ = [
     '../_base_/datasets/dvs_cifar10_spikformer.py',
     '../_base_/default_runtime.py'
 ]
+# Accuracy 84.4000
 
 # model settings
 model = dict(
@@ -10,6 +11,8 @@ model = dict(
     backbone=dict(
         neuron_cfg=dict(
             type='LIFNode',
+            v_reset=None,  # Todo: check here {default: v_reset=0.}
+            detach_reset=True,  # Todo: check here {default: detach_reset=False}
         ),
         in_channels=2,
     ),

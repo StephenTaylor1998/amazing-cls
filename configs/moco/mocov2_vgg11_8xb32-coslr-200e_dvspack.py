@@ -1,39 +1,26 @@
 _base_ = [
-    # '../_base_/datasets/imagenet_bs32_mocov2.py',
-    '../_base_/datasets/cifar10_bs32_mocov2.py',
+    '../_base_/datasets/dvspack_bs32_mocov2.py',
     '../_base_/schedules/imagenet_sgd_coslr_200e.py',
     '../_base_/default_runtime.py',
 ]
 
-data_preprocessor = dict(
-    type='StaticSelfSupDataPreprocessor',
-    time_step=4,
-)
-
 # model settings
 model = dict(
-    # type='SpikeMoCo',
-    type='TETMoCo',
-    time_step=4,
+    type='SpikeMoCo',
     queue_len=65536,
     feat_dim=128,
     momentum=0.001,
     backbone=dict(
-        type='SEWResNet',
-        block_type='SEWBasicBlock',
-        layers=[2, 2, 2, 2],
+        type='VGG11',
+        layers=[1, 1, 2, 4],
         width=[64, 128, 256, 512],
-        stride=[1, 2, 2, 2],
-        in_channels=3,
-        zero_init_residual=True,
-        groups=1, width_per_group=64,
-        replace_stride_with_dilation=None,
-        norm_layer=None,
-        cnf_list=['add'],
+        in_channels=2,
         neuron_cfg=dict(
-            type='IFNode',
+            type='LIFNode',
+            v_reset=None,  # Todo: check here {default: v_reset=0.}
+            detach_reset=True,  # Todo: check here {default: detach_reset=False}
             surrogate_function=dict(
-                type='ATan'
+                type='Sigmoid'
             )
         ),
     ),

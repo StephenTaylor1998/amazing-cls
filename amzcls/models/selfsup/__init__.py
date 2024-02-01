@@ -1,4 +1,3 @@
-from .moco import SpikeMoCo
+from .moco import SpikeMoCo, TETMoCo
 
-
-__all__ = ['SpikeMoCo']
+__all__ = ['SpikeMoCo', 'TETMoCo']

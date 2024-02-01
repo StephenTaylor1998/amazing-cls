@@ -3,25 +3,25 @@ _base_ = [
     '../_base_/datasets/dvs_cifar10_spikformer.py',
     '../_base_/default_runtime.py'
 ]
-# Accuracy 85.6000
+# Accuracy 84.1000
 
 # model settings
 model = dict(
     type='ImageClassifier',
     backbone=dict(
         neuron_cfg=dict(
-            type='LazyStateLIFNode',
+            type='LIFNode',
             v_reset=None,  # Todo: check here {default: v_reset=0.}
             detach_reset=True,  # Todo: check here {default: detach_reset=False}
         ),
         in_channels=2,
-        tebn_step=16,
     ),
     head=dict(
-        type='TETLinearClsHead',
+        type='TALinearClsHead',
         num_classes=10,
         in_channels=512,
-        lamb=0.01,
+        window_sizes=(4,),
+        time_weights=(1.0,),
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,
