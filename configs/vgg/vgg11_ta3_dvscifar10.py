@@ -1,8 +1,9 @@
 _base_ = [
     '../_base_/models/vgg11_dvs.py',
-    '../_base_/datasets/dvs128gesture_spikformer.py',
+    '../_base_/datasets/dvs_cifar10_spikformer.py',
     '../_base_/default_runtime.py'
 ]
+# Accuracy 84.1000
 
 # model settings
 model = dict(
@@ -10,19 +11,21 @@ model = dict(
     backbone=dict(
         neuron_cfg=dict(
             type='LIFNode',
+            v_reset=None,  # Todo: check here {default: v_reset=0.}
+            detach_reset=True,  # Todo: check here {default: detach_reset=False}
         ),
         in_channels=2,
-        tebn_step=16,
     ),
     head=dict(
-        type='TETLinearClsHead',
-        num_classes=11,
+        type='TALinearClsHead',
+        num_classes=10,
         in_channels=512,
-        lamb=0.005,
+        window_sizes=(3,),
+        time_weights=(1.0,),
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,
-            num_classes=11,
+            num_classes=10,
             reduction='mean',
             loss_weight=1.0),
         cal_acc=False,
@@ -62,7 +65,7 @@ param_scheduler = [
     dict(type='CosineAnnealingLR', eta_min=1e-6, by_epoch=True, begin=30)
 ]
 
-train_cfg = dict(by_epoch=True, max_epochs=250, val_interval=1)
+train_cfg = dict(by_epoch=True, max_epochs=200, val_interval=1)
 # train, val, test setting
 val_cfg = dict()
 test_cfg = dict()

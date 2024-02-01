@@ -3,6 +3,7 @@ _base_ = [
     '../_base_/datasets/dvs_cifar10_spikformer.py',
     '../_base_/default_runtime.py'
 ]
+# Accuracy 84.1000
 
 # model settings
 model = dict(
@@ -10,6 +11,8 @@ model = dict(
     backbone=dict(
         neuron_cfg=dict(
             type='LIFNode',
+            v_reset=None,  # Todo: check here {default: v_reset=0.}
+            detach_reset=True,  # Todo: check here {default: detach_reset=False}
         ),
         in_channels=2,
     ),
@@ -17,7 +20,7 @@ model = dict(
         type='TETLinearClsHead',
         num_classes=10,
         in_channels=512,
-        lamb=0.02,
+        lamb=0.005,
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,
@@ -38,7 +41,7 @@ optim_wrapper = dict(
     optimizer=dict(
         type='AdamW',
         lr=1e-3,
-        weight_decay=0.06,
+        weight_decay=0.0001,
         eps=1e-8,
         betas=(0.9, 0.999)),
     paramwise_cfg=dict(

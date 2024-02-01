@@ -1,17 +1,27 @@
 _base_ = [
-    '../_base_/models/spikformer_dvs.py',
+    '../_base_/models/vgg11_dvs.py',
     '../_base_/datasets/dvs_cifar10_spikformer.py',
     '../_base_/default_runtime.py'
 ]
-'TETLinearClsHead'
+# Accuracy 84.1000
+
 # model settings
 model = dict(
     type='ImageClassifier',
+    backbone=dict(
+        neuron_cfg=dict(
+            type='LIFNode',
+            v_reset=None,  # Todo: check here {default: v_reset=0.}
+            detach_reset=True,  # Todo: check here {default: detach_reset=False}
+        ),
+        in_channels=2,
+    ),
     head=dict(
-        type='TETLinearClsHead',
+        type='TALinearClsHead',
         num_classes=10,
-        in_channels=256,
-        lamb=0.01,
+        in_channels=512,
+        window_sizes=(1,),
+        time_weights=(1.0,),
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,

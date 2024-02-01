@@ -1,24 +1,32 @@
 _base_ = [
-    '../_base_/models/vgg11_dvs.py',
-    '../_base_/datasets/dvs_cifar10_spikformer.py',
+    '../_base_/models/ta_vgg11.py',
+    '../_base_/datasets/dvs_cifar10_t128.py',
     '../_base_/default_runtime.py'
 ]
+# Accuracy 83.3000
 
 # model settings
 model = dict(
     type='ImageClassifier',
     backbone=dict(
+        type='TAVGG11',
+        layers=[1, 1, 2, 4],
+        width=[64, 128, 256, 512],
+        in_channels=2,
+        tebn_step=None,
         neuron_cfg=dict(
             type='LIFNode',
+            v_reset=None,  # Todo: check here {default: v_reset=0.}
+            detach_reset=True,  # Todo: check here {default: detach_reset=False}
+            surrogate_function=dict(
+                type='Sigmoid'
+            )
         ),
-        in_channels=2,
-        tebn_step=16,
     ),
     head=dict(
-        type='TETLinearClsHead',
+        type='SpikeLinearClsHead',
         num_classes=10,
         in_channels=512,
-        lamb=0.02,
         loss=dict(
             type='LabelSmoothLoss',
             label_smooth_val=0.1,
@@ -39,7 +47,7 @@ optim_wrapper = dict(
     optimizer=dict(
         type='AdamW',
         lr=1e-3,
-        weight_decay=0.06,
+        weight_decay=0.001,
         eps=1e-8,
         betas=(0.9, 0.999)),
     paramwise_cfg=dict(

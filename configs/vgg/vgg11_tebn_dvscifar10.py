@@ -1,16 +1,20 @@
 _base_ = [
-    '../_base_/models/spikformer_dvs.py',
+    '../_base_/models/vgg11_dvs.py',
     '../_base_/datasets/dvs_cifar10_spikformer.py',
     '../_base_/default_runtime.py'
 ]
-
+# Accuracy 83.9000
 # model settings
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='spikformer_teln_dvs',
-        tdbn_step=16,
-        teln_step=16,
+        neuron_cfg=dict(
+            type='LIFNode',
+            v_reset=None,  # Todo: check here {default: v_reset=0.}
+            detach_reset=True,  # Todo: check here {default: detach_reset=False}
+        ),
+        in_channels=2,
+        tebn_step=16,
     ),
     head=dict(
         loss=dict(
