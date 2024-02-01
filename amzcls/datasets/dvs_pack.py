@@ -13,7 +13,7 @@ class DVSPack(BaseDataset):
     data_infos = None
     pipeline = None
 
-    def __init__(self, *dataset_cfgs, pipeline: Sequence = None, **kwargs):
+    def __init__(self, dataset_cfgs: Sequence, pipeline: Sequence = None, **kwargs):
         super(DVSPack, self).__init__(
             ann_file='', data_prefix='', pipeline=pipeline, lazy_init=True, **kwargs
         )

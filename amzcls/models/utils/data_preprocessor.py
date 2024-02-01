@@ -91,6 +91,43 @@ class StaticSelfSupDataPreprocessor(SelfSupDataPreprocessor):
         return data
 
 
+@MODELS.register_module()
+class DVSSelfSupDataPreprocessor(SelfSupDataPreprocessor):
+    """Image pre-processor for operations, like normalization and bgr to rgb.
+
+    Compared with the :class:`mmengine.ImgDataPreprocessor`, this module
+    supports ``inputs`` as torch.Tensor or a list of torch.Tensor.
+    """
+
+    def __init__(self,
+                 time_step: int = None,
+                 mean: Optional[Sequence[Union[float, int]]] = None,
+                 std: Optional[Sequence[Union[float, int]]] = None,
+                 pad_size_divisor: int = 1,
+                 pad_value: Union[float, int] = 0,
+                 to_rgb: bool = False,
+                 bgr_to_rgb: bool = False,
+                 rgb_to_bgr: bool = False,
+                 non_blocking: Optional[bool] = False):
+        super().__init__(
+            mean=mean,
+            std=std,
+            pad_size_divisor=pad_size_divisor,
+            pad_value=pad_value,
+            to_rgb=to_rgb,
+            bgr_to_rgb=bgr_to_rgb,
+            rgb_to_bgr=rgb_to_bgr,
+            non_blocking=non_blocking)
+
+        self.time_step = time_step
+        self._channel_conversion = to_rgb or bgr_to_rgb or rgb_to_bgr
+
+    def forward(self, data: dict, training: bool = False):
+        data = super(DVSSelfSupDataPreprocessor, self).forward(data, training)
+        data['inputs'] = [process_dvs_data(sample) for sample in data['inputs']]
+        return data
+
+
 def process_static_data(data: Tensor, repeats):
     # DATA[B, C, H, W] -> DATA[T, B, C, H, W]
     return torch.repeat_interleave(data.unsqueeze(0), repeats, dim=0)

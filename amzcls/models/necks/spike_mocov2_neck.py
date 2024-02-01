@@ -51,5 +51,4 @@ class SpikeMoCoV2Neck(BaseModule):
         if self.with_avg_pool:
             x = self.avgpool(x)
         x = self.mlp(x.view(x.size(0), x.size(1), -1))
-        x = x.sum(0)
         return x,
