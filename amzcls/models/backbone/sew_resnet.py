@@ -1,5 +1,5 @@
-import torch
 import torch.nn as nn
+from mmpretrain.models.backbones.base_backbone import BaseBackbone
 from spikingjelly.activation_based import layer, functional
 
 from ..builder import MODELS, BACKBONES
@@ -82,17 +82,12 @@ class SEWBasicBlock(nn.Module):
             self.downsample_sn = build_node(neuron_cfg)
         self.stride = stride
         self.cnf = sew_function(cnf)
-        self.use_res = True
-        self.fp16_enabled = False
 
     def forward(self, x):
         identity = x
 
         if self.downsample is not None:
             identity = self.downsample_sn(self.downsample(x))
-
-        if not self.use_res:
-            return identity
 
         out = self.conv1(x)
         out = self.bn1(out)
@@ -133,17 +128,12 @@ class SEWBottleneck(nn.Module):
             self.downsample_sn = build_node(neuron_cfg)
         self.stride = stride
         self.cnf = sew_function(cnf)
-        self.use_res = True
-        self.fp16_enabled = False
 
     def forward(self, x):
         identity = x
 
         if self.downsample is not None:
             identity = self.downsample_sn(self.downsample(x))
-
-        if not self.use_res:
-            return identity
 
         out = self.conv1(x)
         out = self.bn1(out)
@@ -199,7 +189,6 @@ class SEWResNetCifar(nn.Module):
                              "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
         self.groups = groups
         self.base_width = width_per_group
-        # image net: 3, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False
         self.conv1 = layer.Conv2d(in_channels, self.inplanes, kernel_size=(3, 3), padding=1, bias=False)
         self.bn1 = norm_layer(self.inplanes)
         self.sn1 = build_node(neuron_cfg)
@@ -338,7 +327,7 @@ def sew_wide_resnet101_cifar_2(pretrained=False, progress=True, **kwargs):
 
 
 @MODELS.register_module()
-class SEWResNet(nn.Module):
+class SEWResNet(BaseBackbone):
     def __init__(self, block_type, layers: list, width: list = None, stride: list = None,
                  in_channels=3, zero_init_residual=False, groups=1, width_per_group=64,
                  replace_stride_with_dilation=None, norm_layer=None, cnf_list: tuple = ('add',), neuron_cfg=None):
@@ -370,10 +359,10 @@ class SEWResNet(nn.Module):
                              "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
         self.groups = groups
         self.base_width = width_per_group
-        # image net: 3, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False
         self.conv1 = layer.Conv2d(in_channels, self.inplanes, kernel_size=(7, 7), stride=(2, 2), padding=3, bias=False)
         self.bn1 = norm_layer(self.inplanes)
         self.sn1 = build_node(neuron_cfg)
+        self.maxpool = layer.AvgPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(
             block, width[0], layers[0], stride[0], cnf_list=cnf_list, neuron_cfg=neuron_cfg)
         self.layer2 = self._make_layer(block, width[1], layers[1], stride[1], dilate=replace_stride_with_dilation[0],
@@ -403,6 +392,7 @@ class SEWResNet(nn.Module):
                     nn.init.constant_(m.bn2.weight, 0)
 
         functional.set_step_mode(self, 'm')
+        # functional.set_backend(self, backend='torch', instance=NODES.get(neuron_cfg['type']))
         functional.set_backend(self, backend='cupy', instance=NODES.get(neuron_cfg['type']))
 
     def _make_layer(self, block, planes, blocks, stride=1, dilate=False, cnf_list: tuple = None, neuron_cfg=None):
@@ -435,6 +425,7 @@ class SEWResNet(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.sn1(x)
+        x = self.maxpool(x)
 
         x = self.layer1(x)
         x = self.layer2(x)
@@ -450,59 +441,58 @@ def _resnet(arch, pretrained, progress, **kwargs):
     model = SEWResNet(**kwargs)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls[arch], progress=progress)
-        state_dict.pop('conv1.weight')
-        state_dict.pop('fc.weight')
-        state_dict.pop('fc.bias')
         model.load_state_dict(state_dict, strict=False)
+        print(f'[INFO] Load pretrain weight from {model_urls[arch]}')
+
     return model
 
 
 @BACKBONES.register_module()
-def sew_resnet18(pretrained=False, progress=True, **kwargs):
+def sew_resnet18(pretrained=True, progress=True, **kwargs):
     return _resnet('resnet18', pretrained, progress, layers=[2, 2, 2, 2], **kwargs)
 
 
 @BACKBONES.register_module()
-def sew_resnet34(pretrained=False, progress=True, **kwargs):
+def sew_resnet34(pretrained=True, progress=True, **kwargs):
     return _resnet('resnet34', pretrained, progress, layers=[3, 4, 6, 3], **kwargs)
 
 
 @BACKBONES.register_module()
-def sew_resnet50(pretrained=False, progress=True, **kwargs):
+def sew_resnet50(pretrained=True, progress=True, **kwargs):
     return _resnet('resnet50', pretrained, progress, layers=[3, 4, 6, 3], **kwargs)
 
 
 @BACKBONES.register_module()
-def sew_resnet101(pretrained=False, progress=True, **kwargs):
+def sew_resnet101(pretrained=True, progress=True, **kwargs):
     return _resnet('resnet101', pretrained, progress, layers=[3, 4, 23, 3], **kwargs)
 
 
 @BACKBONES.register_module()
-def sew_resnet152(pretrained=False, progress=True, **kwargs):
+def sew_resnet152(pretrained=True, progress=True, **kwargs):
     return _resnet('resnet152', pretrained, progress, layers=[3, 8, 36, 3], **kwargs)
 
 
 @BACKBONES.register_module()
-def sew_resnext50_32x4d(pretrained=False, progress=True, **kwargs):
+def sew_resnext50_32x4d(pretrained=True, progress=True, **kwargs):
     kwargs['groups'] = 32
     kwargs['width_per_group'] = 4
     return _resnet('resnext50_32x4d', pretrained, progress, layers=[3, 4, 6, 3], **kwargs)
 
 
 @BACKBONES.register_module()
-def sew_resnext101_32x8d(pretrained=False, progress=True, **kwargs):
+def sew_resnext101_32x8d(pretrained=True, progress=True, **kwargs):
     kwargs['groups'] = 32
     kwargs['width_per_group'] = 8
     return _resnet('resnext101_32x8d', pretrained, progress, layers=[3, 4, 23, 3], **kwargs)
 
 
 @BACKBONES.register_module()
-def sew_wide_resnet50_2(pretrained=False, progress=True, **kwargs):
+def sew_wide_resnet50_2(pretrained=True, progress=True, **kwargs):
     kwargs['width_per_group'] = 64 * 2
     return _resnet('wide_resnet50_2', pretrained, progress, layers=[3, 4, 6, 3], **kwargs)
 
 
 @BACKBONES.register_module()
-def sew_wide_resnet101_2(pretrained=False, progress=True, **kwargs):
+def sew_wide_resnet101_2(pretrained=True, progress=True, **kwargs):
     kwargs['width_per_group'] = 64 * 2
     return _resnet('wide_resnet101_2', pretrained, progress, layers=[3, 4, 23, 3], **kwargs)

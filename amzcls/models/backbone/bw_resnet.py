@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from spikingjelly.activation_based import layer
 
 from ..builder import MODELS, BACKBONES
 from ...neurons import layer
@@ -135,7 +134,6 @@ class BWResNetCifar(nn.Module):
                  in_channels=3, zero_init_residual=False, groups=1, width_per_group=64,
                  replace_stride_with_dilation=None, norm_layer=None):
         super().__init__()
-        self.fp16_enabled = False
         block = MODELS.get(block_type)
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
