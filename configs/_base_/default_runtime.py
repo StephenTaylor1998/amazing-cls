@@ -26,7 +26,7 @@ default_hooks = dict(
 # configure environment
 env_cfg = dict(
     # whether to enable cudnn benchmark
-    cudnn_benchmark=True,
+    cudnn_benchmark=True,  # default[cudnn_benchmark=True]
 
     # set multi process parameters
     mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0),
@@ -49,4 +49,4 @@ load_from = None
 resume = False
 
 # Defaults to use random seed and disable `deterministic`
-randomness = dict(seed=None, deterministic=False)
+randomness = dict(seed=None, deterministic=False)  # default[deterministic=False]

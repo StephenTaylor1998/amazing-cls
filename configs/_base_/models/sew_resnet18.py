@@ -2,9 +2,8 @@
 model = dict(
     type='ImageClassifier',
     backbone=dict(
-        type='SEWResNet',
+        type='sew_resnet18',
         block_type='SEWBasicBlock',
-        layers=[2, 2, 2, 2],
         width=[64, 128, 256, 512],
         stride=[1, 2, 2, 2],
         in_channels=3,
@@ -27,6 +26,8 @@ model = dict(
         type='SpikeLinearClsHead',
         num_classes=1000,
         in_channels=512,
+        time_step_embed=None,
+        out_time_step=None,
         cal_acc=True,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
     )

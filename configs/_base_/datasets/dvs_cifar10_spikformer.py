@@ -48,6 +48,8 @@ train_dataloader = dict(
         use_ckpt=False,
         pipeline=train_pipeline),
     sampler=dict(type='DefaultSampler', shuffle=True),
+    pin_memory=True,
+    pin_memory_device="cuda"
 )
 
 val_dataloader = dict(
@@ -63,6 +65,8 @@ val_dataloader = dict(
         use_ckpt=False,
         pipeline=test_pipeline),
     sampler=dict(type='DefaultSampler', shuffle=False),
+    pin_memory=True,
+    pin_memory_device="cuda"
 )
 val_evaluator = dict(type='Accuracy', topk=(1,))
 

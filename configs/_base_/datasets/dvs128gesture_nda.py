@@ -13,7 +13,7 @@ data_preprocessor = dict(
 train_pipeline = [
     # dict(type='RandomFlip', prob=0.5, direction='horizontal'),
     dict(type='ToFloatTensor', keys=['img']),
-    # dict(type='RandomHorizontalFlipDVS', prob=0.5, keys=['img']),
+    dict(type='RandomHorizontalFlipDVS', prob=0.5, keys=['img']),
     # SpikFormerDVS
     dict(type='NDADVSCifar10', keys=['img']),
     dict(type='PackInputs'),
