@@ -15,6 +15,7 @@ model = dict(
         cnf_list=['add'],
         neuron_cfg=dict(
             type='IFNode',
+            v_reset=None,
             surrogate_function=dict(
                 type='ATan'
             )
@@ -23,18 +24,11 @@ model = dict(
     neck=dict(
         type='SpikeGlobalAveragePooling',
     ),
-    # head=dict(
-    #     type='SpikeLinearClsHead',
-    #     num_classes=10,
-    #     in_channels=512,
-    #     cal_acc=True,
-    #     loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
-    # ),
     head=dict(
-        type='TETLinearClsHead',
+        type='SpikeLinearClsHead',
         num_classes=10,
         in_channels=512,
         cal_acc=True,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
-    )
+    ),
 )

@@ -7,7 +7,7 @@ num_bins = 31
 augmentation_space = {
     "Identity": ['torch.tensor(0.0)', False],
     "ShearX": ['torch.linspace(-0.3, 0.3, 31)', True],
-    # "ShearY": ['torch.linspace(-0.3, 0.3, 31)', True],
+    "ShearY": ['torch.linspace(-0.3, 0.3, 31)', True],
     "TranslateX": ['torch.linspace(-0.5, 5.0, 31)', True],
     "TranslateY": ['torch.linspace(-0.5, 5.0, 31)', True],
     "Rotate": ['torch.linspace(-30.0, 30.0, 31)', True],
@@ -26,7 +26,6 @@ train_pipeline = [
     dict(type='ToTensor', keys=['img']),
     # dict(type='ResizeDVS', keys=['img'], scale=(128, 128)),
     dict(type='ToFloatTensor', keys=['img']),
-
     dict(type='RandomHorizontalFlipDVS', prob=0.5, keys=['img']),
     # SpikFormerDVS
     dict(type='SpikFormerDVS', keys=['img'], augmentation_space=augmentation_space),

@@ -1,9 +1,11 @@
 # 2023-01-20
 import random
+from numbers import Number
+from typing import Optional, Sequence, Union
 
 import numpy as np
 import torch
-from torchvision.transforms import RandomHorizontalFlip, InterpolationMode
+from torchvision.transforms import RandomHorizontalFlip, InterpolationMode, RandomCrop
 from torchvision.transforms import Resize
 
 from amzcls.registry import TRANSFORMS
@@ -76,6 +78,45 @@ class ResizeDVS(object):
 
     def __repr__(self):
         return self.__class__.__name__ + f'(keys={self.keys})'
+
+
+@TRANSFORMS.register_module()
+class RandomCropDVS(object):
+
+    def __init__(self,
+                 crop_size: Union[Sequence, int],
+                 padding: Optional[Union[Sequence, int]] = None,
+                 pad_if_needed: bool = False,
+                 pad_val: Union[Number, Sequence[Number]] = 0,
+                 padding_mode: str = 'constant'):
+        self.tv_rand_crop = RandomCrop(crop_size, padding, pad_if_needed, pad_val, padding_mode)
+
+    def __call__(self, results: dict) -> dict:
+        """Transform function to randomly crop images.
+
+        Args:
+            results (dict): Result dict from loading pipeline.
+
+        Returns:
+            dict: Randomly cropped results, 'img_shape'
+                key in result dict is updated according to crop size.
+        """
+        results['img'] = self.tv_rand_crop(results['img'])
+        results['img_shape'] = results['img'].shape
+        return results
+
+    def __repr__(self):
+        """Print the basic information of the transform.
+
+        Returns:
+            str: Formatted string.
+        """
+        repr_str = self.__class__.__name__ + f'(crop_size={self.crop_size}'
+        repr_str += f', padding={self.padding}'
+        repr_str += f', pad_if_needed={self.pad_if_needed}'
+        repr_str += f', pad_val={self.pad_val}'
+        repr_str += f', padding_mode={self.padding_mode})'
+        return repr_str
 
 
 @TRANSFORMS.register_module()

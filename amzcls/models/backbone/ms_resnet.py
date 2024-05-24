@@ -124,7 +124,6 @@ class MSBottleneck(nn.Module):
         self.stride = stride
         self.cnf = sew_function(cnf)
         self.use_res = True
-        self.fp16_enabled = False
 
     def forward(self, x):
         identity = x

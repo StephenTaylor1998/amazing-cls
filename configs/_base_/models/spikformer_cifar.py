@@ -17,6 +17,8 @@ model = dict(
         type='SpikeLinearClsHead',
         num_classes=10,
         in_channels=384,
+        time_step_embed=None,
+        out_time_step=None,
         cal_acc=True,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
     )

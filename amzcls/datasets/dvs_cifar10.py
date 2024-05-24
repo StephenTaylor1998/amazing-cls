@@ -21,7 +21,7 @@ class DVSCifar10(BaseDataset):
     pipeline = None
 
     def __init__(self, data_prefix, test_mode, time_step, data_type='frame',
-                 split_by='number', use_ckpt=False, *args, **kwargs):
+                 split_by='number', use_ckpt=False, shuffle=True, *args, **kwargs):
         super(DVSCifar10, self).__init__(
             ann_file='', data_prefix=data_prefix, test_mode=test_mode, lazy_init=True, *args, **kwargs
         )
@@ -29,7 +29,7 @@ class DVSCifar10(BaseDataset):
         self.data_type = data_type
         self.split_by = split_by
         dvs_dataset = load_dvs_cifar10(data_prefix, test_mode, time_step, data_type, split_by)
-        dataset_indices = dvs_cifar10_indices(train_ratio=0.9, test_mode=test_mode)
+        dataset_indices = dvs_cifar10_indices(train_ratio=0.9, test_mode=test_mode, shuffle=shuffle)
         if use_ckpt:
             ckpt = create_dir(data_prefix, test_mode, time_step, data_type, split_by)
             self.data_infos = load_data_infos_with_ckpt(dvs_dataset, dataset_indices, ckpt)
@@ -68,17 +68,24 @@ def load_dvs_cifar10(data_prefix, test_mode, time_step, data_type='frame', split
     return GLOBAL_DVS_DATASET
 
 
-def dvs_cifar10_indices(train_ratio: float, test_mode):
-    # todo: random-split
+def dvs_cifar10_indices(train_ratio: float, test_mode, shuffle=True):
     global test_indices
     global train_indices
     if (train_indices is None) and (test_indices is None):
         indices = [[i for i in range(j * 1000, (j + 1) * 1000)] for j in range(10)]
-        for index in indices:
-            np.random.seed(index)
-            np.random.shuffle(index)
-        test_indices = [indices[j][int(1000 * train_ratio):] for j in range(10)]
-        train_indices = [indices[j][:int(1000 * train_ratio)] for j in range(10)]
+        if shuffle:
+            for index in indices:
+                np.random.seed(index)
+                np.random.shuffle(index)
+            # ========================== v0 ==========================
+            test_indices = [indices[j][int(1000 * train_ratio):] for j in range(10)]
+            train_indices = [indices[j][:int(1000 * train_ratio)] for j in range(10)]
+        else:
+            # ======================== From PSN =======================
+            split_index = int(1000 * (1. - train_ratio))
+            test_indices = [indices[j][:split_index] for j in range(10)]
+            train_indices = [indices[j][split_index:] for j in range(10)]
+            raise NotImplementedError
 
     return test_indices if test_mode else train_indices
 
